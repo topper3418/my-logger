@@ -16,9 +16,21 @@ class Log(db.Model):
     timestamp = db.Column(db.DateTime)
     log_type = db.Column(db.String(50))
     comment = db.Column(db.String(255))
+    parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
+    parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
 
     def __repr__(self):
         return f'<Log {self.timestamp}, {self.comment}>'
+
+class Activity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime)
+    active_log_id = db.Column(db.Integer, db.ForeignKey('log.id'))
+    active_log = db.relationship('Log', backref='activity', lazy=True)
+
+    def __repr__(self):
+        return f'<Activity {self.timestamp}, {self.active_log_id}>'
+    
 
 with app.app_context():
     Session = sessionmaker(bind=db.engine)
@@ -28,15 +40,86 @@ with app.app_context():
 def index():
     return render_template('index.html')
 
-@app.route('/add_log', methods=['POST'])
-def add_log():
-    data = request.form
+def add_log(log_type, comment):
     new_log = Log(timestamp=datetime.now(),
-                  log_type=data['log-type'], 
-                  comment=data['log-comment'])
+                  log_type=log_type, 
+                  comment=comment)
     with Session() as session:
         session.add(new_log)
         session.commit()
+
+class CommentParser:
+    """takes in a comment, and makes available the following properties:
+    - comment_type (if specified)
+    - parent_id (if specified)
+    - comment (the comment itself, stripped of special commands)"""
+    def __init__(self, comment: str):
+        self.comment = comment
+        self.comment_type = None
+        self.parent_id = None
+        self.state_command = False
+        self.parse_comment()
+    
+    def parse_comment(self):
+        """strips the comment of any special commands"""
+        comment = self.comment
+        commands = []
+        while '[' in comment and ']' in comment:
+            # get the text between the brackets
+            bracket_text = comment[comment.find('[')+1:comment.find(']')]
+            commands.append(bracket_text)
+            # remove the text between the brackets
+            comment = comment.replace(f'[{bracket_text}]', '')
+        # verify the commands are valid
+        if len(commands) > 2:
+            raise ValueError('Too many commands in comment')
+        for command in commands:
+            if command.isnumeric():
+                if self.parent_id:
+                    raise ValueError('Too many parent ids in comment')
+                self.parent_id = int(command)
+            elif command in ['thought', 'action', 'task', 'error', 'success', 
+                             'completion', 'learning', 'break', 'distraction', 
+                             'issue']:
+                if self.comment_type:
+                    raise ValueError('Too many comment types in comment')
+                self.comment_type = command
+            elif not command:
+                self.state_command = True
+            else:
+                raise ValueError(f'Invalid command in comment: {command}')
+        self.comment = comment.strip()
+        if not self.state_command:
+            self.state_command = not self.comment and\
+                                 not self.comment_type and\
+                                 self.parent_id
+
+def add_log(log_type, comment, parent_id):
+    new_log = Log(timestamp=datetime.now(),
+                  log_type=log_type, 
+                  comment=comment,
+                  parent_id=parent_id)
+    with Session() as session:
+        session.add(new_log)
+        session.commit()
+
+def set_activity(log_id: int=None):
+    new_activity = Activity(timestamp=datetime.now(),
+                            active_log_id=log_id)
+    with Session() as session:
+        session.add(new_activity)
+        session.commit()
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    data = request.form
+    parser = CommentParser(data['log-comment'])
+    if parser.state_command:
+        set_activity(parser.parent_id)
+    else:
+        # if the parser picks up a comment type, use that
+        log_type = parser.comment_type or data['log-type']
+        add_log(log_type, parser.comment, parser.parent_id)
     return redirect('/')
 
 @app.route('/get_logs', methods=['GET'])
@@ -52,7 +135,12 @@ def get_logs():
             print(logs)
         else:
             logs = session.query(Log).all()
-    return jsonify([{'id': log.id, 'timestamp': log.timestamp, 'log_type': log.log_type, 'comment': log.comment} for log in logs])
+    return jsonify([{'id': log.id, 
+                     'timestamp': log.timestamp, 
+                     'log_type': log.log_type, 
+                     'comment': log.comment,
+                     'parent_id': log.parent_id} 
+                     for log in logs])
 
 @app.route('/get_log_table', methods=['GET'])
 def get_log_table(): 
@@ -78,6 +166,33 @@ def get_log_table():
 
     # Return the HTML table as a response
     return table
+
+@app.route('/current_activity', methods=['GET'])
+def get_current_activity():
+    with Session() as session:
+        current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
+        if current_activity:
+            current_activity = current_activity.active_log.comment
+        else:
+            current_activity = None
+    return jsonify(current_activity)
+
+@app.route('/get_activity_history', methods=['GET'])
+def get_state_history():
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+    end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+
+    with Session() as session:
+        if start_time and end_time:
+            activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
+        else:
+            activities = session.query(Activity).all()
+    return jsonify([{'id': activity.id, 
+                     'timestamp': activity.timestamp, 
+                     'active_log_id': activity.active_log_id} 
+                     for activity in activities])
 
 if __name__ == '__main__':
     app.run(debug=True)

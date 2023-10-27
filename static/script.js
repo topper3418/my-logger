@@ -13,6 +13,13 @@ async function getAllLogs() {
     return logs;
 }
 
+async function getCurrentactivity() {
+    const response = await fetch('/current_activity');
+    const activity = await response.json();
+    console.log('current activity', activity);
+    return activity;
+}
+
 function populateTable(logs) {
     const tableBody = document.querySelector('#log-table tbody');
     tableBody.innerHTML = '';
@@ -23,9 +30,17 @@ function populateTable(logs) {
             <td>${log.timestamp}</td>
             <td>${log.log_type}</td>
             <td>${log.comment}</td>
+            <td>${log.parent_id}</td>
         `;
         tableBody.appendChild(row);
     });
+}
+
+function populateCurrentActivity(activity) {
+    //get the h2 with the id of current_activity
+    const header = document.querySelector('#current_activity');
+    header.innerHTML = '';
+    header.innerHTML = activity;
 }
 
 async function refreshTable(start_time, end_time) {
@@ -34,8 +49,14 @@ async function refreshTable(start_time, end_time) {
     populateTable(logs);
 }
 
+async function refreshCurrentActivity() {
+    const activity = await getCurrentactivity();
+    populateCurrentActivity(activity);
+}
+
 async function logClick() {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     refreshTable(startOfDay.getTime(), now.getTime());
+    refreshCurrentActivity();
 }
