@@ -39,8 +39,8 @@ function populateTable(logs) {
 function populateCurrentActivity(activity) {
     //get the h2 with the id of current_activity
     const header = document.querySelector('#current_activity');
-    header.innerHTML = '';
-    header.innerHTML = activity;
+    header.innerHTML = 'Current Activity:';
+    header.innerHTML += `<br>${activity}`;
 }
 
 async function refreshTable(start_time, end_time) {

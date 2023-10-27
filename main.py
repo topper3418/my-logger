@@ -119,7 +119,9 @@ def submit():
     else:
         # if the parser picks up a comment type, use that
         log_type = parser.comment_type or data['log-type']
-        add_log(log_type, parser.comment, parser.parent_id)
+        activity = get_activity()
+        parent_id = parser.parent_id or None if not activity else get_activity().id
+        add_log(log_type, parser.comment, parent_id)
     return redirect('/')
 
 @app.route('/get_logs', methods=['GET'])
@@ -167,15 +169,19 @@ def get_log_table():
     # Return the HTML table as a response
     return table
 
-@app.route('/current_activity', methods=['GET'])
-def get_current_activity():
+def get_activity() -> Log:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
         if current_activity:
-            current_activity = current_activity.active_log.comment
+            current_activity = current_activity.active_log
         else:
             current_activity = None
-    return jsonify(current_activity)
+    return current_activity
+
+@app.route('/current_activity', methods=['GET'])
+def get_current_activity():
+    current_activity = get_activity()
+    return jsonify(current_activity.comment if current_activity else 'no current task')
 
 @app.route('/get_activity_history', methods=['GET'])
 def get_state_history():
