@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from flask import current_app
 
-from datetime import datetime
+from datetime import datetime, date
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
@@ -46,7 +46,6 @@ def get_logs():
     start_time = datetime.fromtimestamp(int(start_time)/1000.0)
     end_time = datetime.fromtimestamp(int(end_time)/1000.0)
 
-
     with Session() as session:
         if start_time and end_time:
             logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
@@ -54,6 +53,31 @@ def get_logs():
         else:
             logs = session.query(Log).all()
     return jsonify([{'id': log.id, 'timestamp': log.timestamp, 'log_type': log.log_type, 'comment': log.comment} for log in logs])
+
+@app.route('/get_log_table', methods=['GET'])
+def get_log_table(): 
+    current_date = date.today()
+
+    # Set the start_time to the beginning of the current day
+    start_time = datetime.combine(current_date, datetime.min.time())
+
+    # Set the end_time to the end of the current day
+    end_time = datetime.combine(current_date, datetime.max.time())
+
+    with Session() as session:
+        if start_time and end_time:
+            logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
+        else:
+            logs = session.query(Log).all()
+
+    # Create an HTML table from the data
+    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Type</th><th>Comment</th></tr>'
+    for log in logs:
+        table += f'<tr><td>{log.id}</td><td>{log.timestamp}</td><td>{log.log_type}</td><td>{log.comment}</td></tr>'
+    table += '</table>'
+
+    # Return the HTML table as a response
+    return table
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,14 @@
+make comments able to take links and files and such
+Use LLM's to predict the type
+use llm to summarize my day
+add download logs button
+add filter by type button
+add edit functionality to the table
+make it so TODO's create a separate list, and then we can make "progress" and "complete" and "milestone" types modify them. At first you'd have to select the ID
+make a command-line program "log" to compliment this, I can go win+R -> log {logtype} message. It would be really fast
+make it so the table scrolls independant of the form
+maybe I can make (on click) the type cells turn into dropdowns such that we can just go change it. that would mean we need a "type" table too
+across the top, there should be a stacked bar graph for logs per hour broken down by type
+when you have the todos across the top, make it so you can click on one of the todos and your log will be attached to it.
+this could completely replace the single-task scheduler. I can make it so todo's can be added to the todos and they would show as a tree view at the top, completed todos go away, you can click on a todo to get the logs filtered down for just that one.
+I should evolve this such that events are one aspect of the data recorded, but you have a range of statuses you can choose from and those are persistent. you will always have a status.
