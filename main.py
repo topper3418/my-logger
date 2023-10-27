@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from flask import current_app
 
 from datetime import datetime, date
+from typing import List
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
@@ -161,9 +162,9 @@ def get_log_table():
             logs = session.query(Log).all()
 
     # Create an HTML table from the data
-    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Type</th><th>Comment</th></tr>'
+    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Type</th><th>Comment</th><th>Parent ID</th></tr>'
     for log in logs:
-        table += f'<tr><td>{log.id}</td><td>{log.timestamp}</td><td>{log.log_type}</td><td>{log.comment}</td></tr>'
+        table += f'<tr><td>{log.id}</td><td>{log.timestamp}</td><td>{log.log_type}</td><td>{log.comment}</td><td>{log.parent_id}</td></tr>'
     table += '</table>'
 
     # Return the HTML table as a response
@@ -183,22 +184,40 @@ def get_current_activity():
     current_activity = get_activity()
     return jsonify(current_activity.comment if current_activity else 'no current task')
 
+def get_activity_history(session, start_time: datetime=None, end_time: datetime=None) -> List[Activity]:
+    if start_time and end_time:
+        activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
+    else:
+        activities = session.query(Activity).all()
+    return activities
+
 @app.route('/get_activity_history', methods=['GET'])
 def get_state_history():
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
     start_time = datetime.fromtimestamp(int(start_time)/1000.0)
     end_time = datetime.fromtimestamp(int(end_time)/1000.0)
-
-    with Session() as session:
-        if start_time and end_time:
-            activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
-        else:
-            activities = session.query(Activity).all()
+    with Session() as session: 
+        activities = get_activity_history(session, start_time=start_time, end_time=end_time)
     return jsonify([{'id': activity.id, 
                      'timestamp': activity.timestamp, 
                      'active_log_id': activity.active_log_id} 
                      for activity in activities])
+
+@app.route('/get_activity_history_table', methods=['GET'])
+def get_state_history_table():
+    start_time = datetime.now().date()
+    end_time = datetime.now()
+    # Create an HTML table from the data
+    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Id</th><th>Comment</th></tr>'
+    with Session() as session:
+        activities = get_activity_history(session, start_time=start_time, end_time=end_time)
+        for activity in activities:
+            comment = None if not activity.active_log_id else activity.active_log.comment
+            table += f'<tr><td>{activity.id}</td><td>{activity.timestamp}</td><td>{activity.active_log_id}</td><td>{comment}</td></tr>'
+    table += '</table>'
+    return table
+
 
 if __name__ == '__main__':
     app.run(debug=True)
