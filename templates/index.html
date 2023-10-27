@@ -10,21 +10,21 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
         <body>
             <h1>My Logger</h1>
+            <h2 id="current_activity"></h2>
             <div class="row-container">
-                <form id="log-form" action="/add_log" method="POST">
+                <form id="log-form" action="/submit" method="POST">
                     <label for="log-type">Log Type:</label>
                     <select id="log-type" name="log-type">
-                        <option value="action">Action</option>
                         <option value="thought">Thought</option>
-                        <option value="accomplishment">Accomplishment</option>
-                        <option value="todo">Todo</option>
-                        <option value="screw-up">Screw Up</option>
-                        <option value="milestone">Milestone</option>
-                        <option value="curiosity">Curiosity</option>
+                        <option value="action">Action</option>
+                        <option value="task">Task</option>
+                        <option value="error">Error</option>
+                        <option value="success">Success</option>
+                        <option value="completion">Completion</option>
                         <option value="learning">Learning</option>
                         <option value="break">Break</option>
                         <option value="distraction">Distraction</option>
-                        <option value="improvement">Improvement</option>
+                        <option value="issue">Issue</option>
                     </select>
                     <label for="log-comment">Comment:</label>
                     <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
@@ -37,6 +37,7 @@
                             <th>Timestamp</th>
                             <th>Type</th>
                             <th>Log</th>
+                            <th>Parent</th>
                         </tr>
                     </thead>
                     <tbody>
