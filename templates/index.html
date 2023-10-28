@@ -12,7 +12,7 @@
             <h1>My Logger</h1>
             <h2 id="current_activity"></h2>
             <div class="row-container">
-                <form id="log-form" action="/submit" method="POST">
+                <form id="log-form">
                     <label for="log-type">Log Type:</label>
                     <select id="log-type" name="log-type">
                         <option value="thought">Thought</option>
@@ -28,7 +28,7 @@
                     </select>
                     <label for="log-comment">Comment:</label>
                     <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
-                    <button type="submit" onclick="logClick()">Add Log</button>
+                    <button id="submit">Add Log</button>
                 </form>
                 <table id="log-table">
                     <thead>
@@ -47,6 +47,19 @@
             <script src="{{ url_for('static', filename='script.js') }}"></script>
             <script>
                 window.addEventListener('load', function() {
+                    logClick();
+                });
+
+                const textarea = document.getElementById('log-comment');
+                textarea.addEventListener('keydown', function(event) {
+                    if (event.keyCode === 13 && !event.shiftKey) {
+                        logClick();
+                    }
+                });
+
+                const button = document.getElementById('submit');
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
                     logClick();
                 });
             </script>

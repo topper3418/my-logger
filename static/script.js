@@ -55,8 +55,31 @@ async function refreshCurrentActivity() {
 }
 
 async function logClick() {
+    await submitLog();
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     refreshTable(startOfDay.getTime(), now.getTime());
     refreshCurrentActivity();
 }
+
+async function submitLog() {
+    // get the text box and dropdown
+    const textBox = document.getElementById('log-comment');
+    const dropdown = document.getElementById('log-type');
+    // get the value of the text box and dropdown
+    const comment = textBox.value;
+    const logType = dropdown.value;
+    // send the value of the text box and dropdown to the server
+    const response = await fetch(`/submit`, {
+        method: 'POST',
+        body: JSON.stringify({ 'log-comment': comment, 'log-type': logType }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    console.log(response);
+    // clear the text box
+    textBox.value = '';
+    return response;
+}
+

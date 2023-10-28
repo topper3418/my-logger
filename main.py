@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from flask import current_app
 
 from datetime import datetime, date
+from icecream import ic
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
@@ -112,7 +113,8 @@ def set_activity(log_id: int=None):
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    data = request.form
+    data = request.get_json()
+    ic(data)
     parser = CommentParser(data['log-comment'])
     if parser.state_command:
         set_activity(parser.parent_id)
@@ -134,7 +136,7 @@ def get_logs():
     with Session() as session:
         if start_time and end_time:
             logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
-            print(logs)
+            ic(logs)
         else:
             logs = session.query(Log).all()
     return jsonify([{'id': log.id, 
