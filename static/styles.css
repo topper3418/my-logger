@@ -32,22 +32,23 @@ table th {
 /* Style the form */
 form {
   margin-top: 20px;
+  flex-direction: row;
 }
 
-form label, form textarea, form select, form button {
+label, textarea, select, button {
   display: block;
   margin-bottom: 10px;
 }
 
-form label {
+label {
   font-weight: bold;
 }
 
-form textarea {
-  resize: none;
+textarea {
+  width: 50vw;
 }
 
-form button {
+button {
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -55,13 +56,14 @@ form button {
   cursor: pointer;
 }
 
-form button:hover {
+button:hover {
   background-color: #3e8e41;
 }
 
 /* Style the h1 */
 h1 {
   text-align: center;
+  flex-grow: 1;
 }
 
 /* Style the body */
@@ -70,6 +72,7 @@ body {
   padding: 0;
   font-family: Arial, sans-serif;
   background-color: #f2f2f2;
+  overflow: hidden;
 }
 
 
@@ -77,6 +80,50 @@ body {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: space-between;
     margin-top: 20px;
+    flex-grow: 1;
+}
+
+.row-cluster {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.push-bottom {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.column-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: space-between;
+    flex-grow: 1;
+
+}
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  position: fixed;
+  bottom: 0;
+}
+
+.table-column {
+  overflow-y: scroll;
+  max-height: calc(100vh - 350px);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  overflow: scroll;
+  margin: 5px;
 }

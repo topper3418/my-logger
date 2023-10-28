@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Static and Scrollable</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+    }
+    .left {
+      width: 50%;
+      background-color: lightgrey;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 100vh;
+    }
+    .right {
+      width: 50%;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    .textbox {
+      margin: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <textarea id="inputText" class="textbox"></textarea>
+      <button id="addRow">Add Row</button>
+    </div>
+    <div class="right">
+      <table id="myTable">
+        <thead>
+          <tr>
+            <th>Header 1</th>
+            <th>Header 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Row 1, Cell 1</td>
+            <td>Row 1, Cell 2</td>
+          </tr>
+          <!-- Add more rows as needed -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    document.getElementById('addRow').addEventListener('click', function() {
+      const inputText = document.getElementById('inputText').value;
+      const table = document.getElementById('myTable').getElementsByTagName('tbody')[0];
+      const newRow = table.insertRow();
+      const cell1 = newRow.insertCell(0);
+      const cell2 = newRow.insertCell(1);
+      cell1.innerHTML = inputText;
+      cell2.innerHTML = 'New Cell';
+    });
+  </script>
+</body>
+</html>
