@@ -23,8 +23,7 @@ table {
 
 table th,
 table td {
-  border: 1px solid black;
-  padding: 8px;
+  padding: 5px;
 }
 
 table thead {
@@ -116,7 +115,6 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   align-items: space-between;
-  flex-grow: 1;
 
 }
 
@@ -125,18 +123,20 @@ body {
   flex-direction: row;
   position: fixed;
   bottom: 0;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .table-column {
   overflow-y: scroll;
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 400px);
   align-items: flex-end;
-  width: 33%;
+  width: 20%;
 }
 
 .tree-column {
   overflow-y: scroll;
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 400px);
   width: 33%;
 }
 
@@ -185,4 +185,14 @@ body {
 
 .bordered {
   border: 1px solid black;
+}
+
+.test {
+  color: lightblue
+}
+
+.push-left {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
 }

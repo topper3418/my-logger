@@ -16,6 +16,7 @@ db = SQLAlchemy(app)
 class LogType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     log_type = db.Column(db.String(50))
+    color = db.Column(db.String(50))
 
     def __repr__(self):
         return f'<LogTypes {self.id} - {self.log_type}>'
@@ -137,7 +138,7 @@ def configure_log_types():
         return render_template('configure_log_types.html')
     elif request.method == 'POST':
         data = request.form
-        log_type = LogType(log_type=data['log-type'])
+        log_type = LogType(log_type=data['log-type'], color=data['color'])
         with Session() as session:
             session.add(log_type)
             session.commit()
@@ -165,7 +166,7 @@ def get_logs():
         else:
             logs = session.query(Log).all()
         data = [{'id': log.id,
-                    'timestamp': log.timestamp,
+                    'timestamp': log.timestamp.strftime('%H:%M'),
                     'log_type': log.log_type.log_type if log.log_type else None,
                     'comment': log.comment,
                     'parent_id': log.parent_id} for log in logs]
@@ -175,7 +176,10 @@ def get_logs():
 def get_log_types():
     with Session() as session:
         log_types = session.query(LogType).all()
-    return jsonify([{'id': log_type.id, 'log_type': log_type.log_type} for log_type in log_types])
+    return jsonify([{'id': log_type.id, 
+                     'log_type': log_type.log_type,
+                     'color': log_type.color} 
+                     for log_type in log_types])
 
 @app.route('/get_log_table', methods=['GET'])
 def get_log_table(): 
@@ -233,7 +237,7 @@ def get_state_history():
                      'active_log_id': activity.active_log_id} 
                      for activity in activities])
 
-def get_logs(session, start_time: datetime=None, end_time: datetime=None) -> List[Log]:
+def get_logs_helper(session, start_time: datetime=None, end_time: datetime=None) -> List[Log]:
     """returns a list of logs between the given start and end times"""
     if start_time and end_time:
         return session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
@@ -267,7 +271,7 @@ def get_log_tree():
         start_time = datetime.fromtimestamp(int(start_time)/1000.0)
         end_time = datetime.fromtimestamp(int(end_time)/1000.0)
     with Session() as session:
-        logs = get_logs(session, start_time, end_time)
+        logs = get_logs_helper(session, start_time, end_time)
         log_ids = [log.id for log in logs]
         orphans = [log for log in logs if log.parent_id not in log_ids]
         tree = [assemble_tree(session, orphan) for orphan in orphans]

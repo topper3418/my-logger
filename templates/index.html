@@ -20,13 +20,6 @@
                 <div class="push-right">
                     <table id="log-table">
                         <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Timestamp</th>
-                                <th>Type</th>
-                                <th>Log</th>
-                                <th>Parent</th>
-                            </tr>
                         </thead>
                         <tbody>
                         </tbody>
@@ -35,18 +28,21 @@
             </div>
         </div>
         <div class="input-container">
-            <div class="column-container">
-                <div class="row-container">
-                    <div class="row-cluster">
-                        <label for="log-type">Log Type:</label>
-                        <select id="log-type-dropdown" name="log-type"></select>
-                    </div>
-                    <label for="log-comment">Comment:</label>
-                </div>
-                <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
+            <div class="push-left">
+                <ul id="log-types-list"></ul>
             </div>
-            <div class="push-bottom">
-                <button id="submit">Add Log</button>
+            <div class="row-cluster">
+                <div class="column-container">
+                    <div class="row-container">
+                        <div class="row-cluster">
+                            <select id="log-type-dropdown" name="log-type"></select>
+                        </div>
+                    </div>
+                    <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
+                </div>
+                <div class="push-bottom">
+                    <button id="submit">Add Log</button>
+                </div>
             </div>
         </div>
     </div>
@@ -54,6 +50,7 @@
     <script>
         window.addEventListener('load', function () {
             refreshViews();
+            populateLogTypeList();
         });
 
         const textarea = document.getElementById('log-comment');

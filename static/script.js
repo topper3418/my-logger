@@ -24,13 +24,19 @@ function populateTable(logs) {
     logs.reverse();
     logs.forEach(log => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${log.id}</td>
-            <td>${log.timestamp}</td>
-            <td>${log.log_type}</td>
-            <td>${log.comment}</td>
-            <td>${log.parent_id}</td>
-        `;
+
+        timestamp_cell = document.createElement('td');
+        timestamp_cell.innerHTML = log.timestamp;
+        timestamp_cell.style.textAlign = 'right';
+        row.appendChild(timestamp_cell);
+
+        parent_cell = document.createElement('td');
+
+        comment_cell = document.createElement('td');
+        comment_cell.innerHTML = log.comment;
+        comment_cell.style.color = getColor(log);
+        row.appendChild(comment_cell);
+
         tableBody.appendChild(row);
     });
 }
@@ -56,10 +62,14 @@ async function refreshCurrentActivity() {
 async function refreshViews() { 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    refreshTable(startOfDay.getTime(), now.getTime());
-    refreshLogTree(startOfDay.getTime(), now.getTime());
+    console.log('refreshing current activity')
     refreshCurrentActivity();
+    console.log('refreshing dropdown')
     populateLogTypeDropdown();
+    console.log('refreshing log table')
+    refreshTable(startOfDay.getTime(), now.getTime());
+    console.log('refreshing log tree')
+    refreshLogTree(startOfDay.getTime(), now.getTime());
 }
 
 async function submitLog() {
@@ -94,7 +104,6 @@ async function getLogTree(start_time, end_time) {
 function collapseChildren(event) {
     // get the parent element
     const parent = event.target.parentElement.parentElement;
-    console.log(parent)
     // get the element with the class of children
     const children = parent.querySelector('.children');
     // toggle the class of hidden
@@ -102,12 +111,25 @@ function collapseChildren(event) {
     parent.classList.toggle('bordered');
 }
 
-function makeLogElement(log) {
+function getColor(log) {
+    const dropdown = document.getElementById('log-type-dropdown');
+    storedTypes = JSON.parse(dropdown.dataset.log_types);
+    const logType = log.log_type;
+    const typeColor = storedTypes.find(item => item.log_type === logType).color;
+    return typeColor;
+}
+
+function makeLogTreeElement(log) {
     const logElement = document.createElement('p');
     logElement.classList.add('log-element');
+    logElement.dataset.log_id = log.id;
+    logElement.style.color = getColor(log);
+
+    const treeDiv = document.getElementById('log-tree');
+    const collapsedIds = treeDiv.dataset.collapsed.split(',');
     
     const logTypeElement = document.createElement('span');
-    logTypeElement.innerHTML = `<b>${log.id}-${log.log_type}</b>: `;
+    logTypeElement.innerHTML = `<b>${log.id}</b>: `;
     logTypeElement.addEventListener('click', collapseChildren);
     
     const logCommentElement = document.createElement('span');
@@ -122,19 +144,32 @@ function makeLogElement(log) {
         const childrenDiv = document.createElement('div');
         childrenDiv.classList.add('children');
         log.children.forEach(child => {
-            childrenDiv.appendChild(makeLogElement(child));
+            childrenDiv.appendChild(makeLogTreeElement(child));
         });
         logElement.appendChild(childrenDiv);
+    }
+
+    if (collapsedIds.includes(log.id.toString())) {
+        logElement.querySelector('.children').classList.toggle('hidden');
+        logElement.classList.toggle('bordered');
     }
     
     return logElement;
 }
 
+
 function populateLogTree(tree) {
     const treeDiv = document.getElementById('log-tree');
+    // get the log id's of collapsed elements
+    const collapsed = document.querySelectorAll('.children.hidden');
+    const collapsedIds = [];
+    collapsed.forEach(element => {
+        collapsedIds.push(element.parentElement.dataset.log_id);
+    });
     treeDiv.innerHTML = '';
+    treeDiv.dataset.collapsed = collapsedIds;
     tree.forEach(log => {
-        treeDiv.appendChild(makeLogElement(log));
+        treeDiv.appendChild(makeLogTreeElement(log));
     });
 }
 
@@ -157,6 +192,7 @@ async function populateLogTypeList() {
         const item = document.createElement('li');
         item.innerHTML = type.log_type;
         item.dataset.type_id = type.id;
+        item.style.color = type.color; // set the color of the list item
         item.addEventListener('click', highlightItem);
         list.appendChild(item);
     });
@@ -166,6 +202,9 @@ async function populateLogTypeDropdown() {
     dropdown = document.getElementById('log-type-dropdown');
     dropdown.innerHTML = '';
     const types = await getLogTypes();
+    dropdown.dataset.log_types = JSON.stringify(types);
+    console.log(types);
+    console.log(dropdown.dataset.log_types);
     types.forEach(type => {
         const option = document.createElement('option');
         option.value = type.id;
@@ -190,3 +229,4 @@ function deleteHighlighted() {
     });
     populateLogTypeList();
 }
+
