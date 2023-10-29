@@ -20,6 +20,8 @@ async function getCurrentactivity() {
 function populateTable(logs) {
     const tableBody = document.querySelector('#log-table tbody');
     tableBody.innerHTML = '';
+    // reverse the order of logs
+    logs.reverse();
     logs.forEach(log => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -89,11 +91,31 @@ async function getLogTree(start_time, end_time) {
     return tree;
 }
 
+function collapseChildren(event) {
+    // get the parent element
+    const parent = event.target.parentElement.parentElement;
+    console.log(parent)
+    // get the element with the class of children
+    const children = parent.querySelector('.children');
+    // toggle the class of hidden
+    children.classList.toggle('hidden');
+    parent.classList.toggle('bordered');
+}
+
 function makeLogElement(log) {
-    logText = `<b>${log.id}-${log.log_type}</b>: ${log.comment}`;
     const logElement = document.createElement('p');
     logElement.classList.add('log-element');
-    logElement.innerHTML = logText;
+    
+    const logTypeElement = document.createElement('span');
+    logTypeElement.innerHTML = `<b>${log.id}-${log.log_type}</b>: `;
+    logTypeElement.addEventListener('click', collapseChildren);
+    
+    const logCommentElement = document.createElement('span');
+    logCommentElement.innerHTML = log.comment;
+    
+    logElement.appendChild(logTypeElement);
+    logElement.appendChild(logCommentElement);
+    
     // determine if it has children
     if (log.children) {
         // if it has children, make a div for them and populate it
@@ -104,6 +126,7 @@ function makeLogElement(log) {
         });
         logElement.appendChild(childrenDiv);
     }
+    
     return logElement;
 }
 

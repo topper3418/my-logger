@@ -155,6 +155,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   padding-left: 20px;
+  border-left: 3px solid black;
 }
 
 .log-element {
@@ -165,4 +166,23 @@ body {
 
 .highlighted {
   color: rgb(0, 255, 76);
+}
+
+.log-tree {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+.bordered {
+  border: 1px solid black;
 }
