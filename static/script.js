@@ -103,7 +103,7 @@ async function getLogTree(start_time, end_time) {
 
 function collapseChildren(event) {
     // get the parent element
-    const parent = event.target.parentElement.parentElement;
+    const parent = event.target.parentElement.parentElement.parentElement;
     // get the element with the class of children
     const children = parent.querySelector('.children');
     // toggle the class of hidden
@@ -128,14 +128,18 @@ function makeLogTreeElement(log) {
     const treeDiv = document.getElementById('log-tree');
     const collapsedIds = treeDiv.dataset.collapsed.split(',');
     
-    const logTypeElement = document.createElement('span');
-    logTypeElement.innerHTML = `<b>${log.id}</b>: `;
-    logTypeElement.addEventListener('click', collapseChildren);
+    const logIdElement = document.createElement('span');
+    logIdElement.innerHTML = `<b>${log.id}</b>: `;
+    logIdElement.style.cursor = 'pointer';
+    if (log.complete) {
+        logIdElement.style.color = 'green';
+    }
+    logIdElement.addEventListener('click', collapseChildren);
     
     const logCommentElement = document.createElement('span');
     logCommentElement.innerHTML = log.comment;
     
-    logElement.appendChild(logTypeElement);
+    logElement.appendChild(logIdElement);
     logElement.appendChild(logCommentElement);
     
     // determine if it has children
@@ -156,7 +160,6 @@ function makeLogTreeElement(log) {
     
     return logElement;
 }
-
 
 function populateLogTree(tree) {
     const treeDiv = document.getElementById('log-tree');
@@ -230,3 +233,143 @@ function deleteHighlighted() {
     populateLogTypeList();
 }
 
+async function getTodayData() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const start_time = startOfDay.getTime();
+    const end_time = now.getTime();
+    const response = await fetch(`/get_logs_v2?start_time=${start_time}&end_time=${end_time}`);
+    return await response.json();
+}
+
+function populateTableV2(todayData) {
+    const tableBody = document.querySelector('#log-table tbody');
+    tableBody.innerHTML = '';
+    // reverse the order of logs
+    todayData.reverse();
+    todayData.forEach(log => {
+        const row = document.createElement('tr');
+
+        timestamp_cell = document.createElement('td');
+        timestamp_cell.innerHTML = log.timestamp;
+        timestamp_cell.style.textAlign = 'right';
+        row.appendChild(timestamp_cell);
+
+        parent_cell = document.createElement('td');
+
+        comment_cell = document.createElement('td');
+        comment_cell.innerHTML = log.comment;
+        comment_cell.style.color = getColor(log);
+        row.appendChild(comment_cell);
+
+        tableBody.appendChild(row);
+    });
+}
+
+function makeLogTreeElementV2(log) {
+    const logWrapper = document.createElement('div');
+    logWrapper.classList.add('column-container');
+    logWrapper.style.padding = '0';
+    const logElement = document.createElement('div');
+    logElement.classList.add('row-cluster');
+    logElement.classList.add('log-element');
+    logElement.dataset.log_id = log.id;
+    logElement.style.color = getColor(log);
+    logWrapper.appendChild(logElement);
+
+    const treeDiv = document.getElementById('log-tree');
+    if (!treeDiv.dataset.collapsed) {
+        treeDiv.dataset.collapsed = '';
+    }
+    const collapsedIds = treeDiv.dataset.collapsed.split(',');
+    
+    const logIdElement = document.createElement('p');
+    logIdElement.innerHTML = `<b>${log.id}</b>: `;
+    logIdElement.style.cursor = 'pointer';
+    if (log.complete) {
+        logIdElement.style.color = 'green';
+    }
+    logIdElement.addEventListener('click', collapseChildren);
+    
+    const logDurationElement = document.createElement('p');
+    logDurationElement.innerHTML = log.time_spent;
+
+    const logCommentElement = document.createElement('p');
+    logCommentElement.innerHTML = log.comment;
+    logCommentElement.style.flexGrow = 1;
+    
+    logElement.appendChild(logIdElement);
+    logElement.appendChild(logCommentElement);
+    logElement.appendChild(logDurationElement);
+    
+    // determine if it has children
+    if (log.children) {
+        // if it has children, make a div for them and populate it
+        const childrenDiv = document.createElement('div');
+        childrenDiv.classList.add('children');
+        log.children.forEach(child => {
+            childrenDiv.appendChild(makeLogTreeElementV2(child));
+        });
+        logWrapper.appendChild(childrenDiv);
+    }
+
+    if (collapsedIds.includes(log.id.toString())) {
+        logWrapper.querySelector('.children').classList.toggle('hidden');
+        logWrapper.classList.toggle('bordered');
+    }
+    
+    return logWrapper;
+}
+
+function get_children(log, todayData) {
+    const children = todayData.filter(item => item.parent_id === log.id);
+    children.forEach(child => {
+        child.children = get_children(child, todayData);
+    });
+    return children;
+}
+
+function get_orphans(todayData) {
+    console.log(todayData)
+    const orphans = [];
+    todayData.forEach(log => {
+        // if no parent id, or parent id not in data
+        if (!log.parent_id || !todayData.find(item => item.id === log.parent_id)) {
+            orphans.push(log);
+        }
+    }
+    );
+    return orphans;
+}
+
+function make_into_tree(todayData) {
+    const tree = get_orphans(todayData);
+    tree.forEach(log => {
+        log.children = get_children(log, todayData);
+    });
+    return tree;
+}
+
+function populateTreeV2(todayData) {
+    const treeDiv = document.getElementById('log-tree');
+    treeDiv.innerHTML = '';
+    treeData = make_into_tree(todayData);
+    treeData.forEach(log => {
+        treeDiv.appendChild(makeLogTreeElementV2(log));
+    });
+}
+
+async function refreshViewsV2() { 
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    console.log('refreshing current activity')
+    refreshCurrentActivity();
+    console.log('refreshing dropdown')
+    populateLogTypeDropdown();
+    console.log('getting data');
+    const todayData = await getTodayData();
+    console.log('refreshing log tree')
+    populateTreeV2(todayData);
+    console.log('refreshing log table')
+    populateTableV2(todayData);
+}

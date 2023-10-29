@@ -215,6 +215,19 @@ def get_activity() -> Log:
             current_activity = None
     return current_activity
 
+def get_span(session, activity: Activity) -> int:
+    """returns the amount of time between the given activity and the next one"""
+    next_activity = session.query(Activity).filter(Activity.id == activity.id + 1).first()
+    if next_activity:
+        return (next_activity.timestamp - activity.timestamp).total_seconds()
+    else:
+        return (datetime.now() - activity.timestamp).total_seconds()
+
+def get_active_duration(session, log_id: int) -> int:
+    """returns the amount of time between the given log and the next activity"""
+    active_spans = session.query(Activity).filter(Activity.active_log_id == log_id).all()
+    return sum([get_span(session, activity) for activity in active_spans])
+
 @app.route('/current_activity', methods=['GET'])
 def get_current_activity():
     current_activity = get_activity()
@@ -224,18 +237,21 @@ def get_current_activity():
 def get_state_history():
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
-    start_time = datetime.fromtimestamp(int(start_time)/1000.0)
-    end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+    if start_time and end_time:
+        start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+        end_time = datetime.fromtimestamp(int(end_time)/1000.0)
 
     with Session() as session:
         if start_time and end_time:
             activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
         else:
             activities = session.query(Activity).all()
-    return jsonify([{'id': activity.id, 
-                     'timestamp': activity.timestamp, 
-                     'active_log_id': activity.active_log_id} 
-                     for activity in activities])
+        data = [{'id': activity.id, 
+                 'timestamp': activity.timestamp, 
+                 'duration': get_span(session, activity).total_seconds(),
+                 'active_log_id': activity.active_log_id} 
+                 for activity in activities]
+    return jsonify(data)
 
 def get_logs_helper(session, start_time: datetime=None, end_time: datetime=None) -> List[Log]:
     """returns a list of logs between the given start and end times"""
@@ -255,12 +271,14 @@ def get_children(session, log: Log) -> List[Log]:
 def assemble_tree(session, log: Log) -> dict:
     """returns a dictionary representing the given log and its children"""
     children = get_children(session, log)
+    has_complete = any(child.log_type.log_type == 'complete' for child in children)
     dict_out = {'id': log.id,
-            'timestamp': log.timestamp,
-            'log_type': log.log_type.log_type if log.log_type else None,
-            'comment': log.comment,
-            'parent_id': log.parent_id if log.parent_id else None,
-            'children': [assemble_tree(session, child) for child in children]}
+                'timestamp': log.timestamp,
+                'log_type': log.log_type.log_type if log.log_type else None,
+                'comment': log.comment,
+                'parent_id': log.parent_id if log.parent_id else None,
+                'complete': has_complete,
+                'children': [assemble_tree(session, child) for child in children]}
     return dict_out
 
 @app.route('/get_log_tree', methods=['GET'])
@@ -276,6 +294,26 @@ def get_log_tree():
         orphans = [log for log in logs if log.parent_id not in log_ids]
         tree = [assemble_tree(session, orphan) for orphan in orphans]
     return jsonify(tree)
+
+@app.route('/get_logs_v2', methods=['GET'])
+def get_logs_v2():
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+    end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+
+    with Session() as session:
+        if start_time and end_time:
+            logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
+        else:
+            logs = session.query(Log).all()
+        data = [{'id': log.id,
+                 'timestamp': log.timestamp.strftime('%H:%M'),
+                 'log_type': log.log_type.log_type if log.log_type else None,
+                 'time_spent': get_active_duration(session, log.id),
+                 'comment': log.comment,
+                 'parent_id': log.parent_id} for log in logs]
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)
