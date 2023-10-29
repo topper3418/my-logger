@@ -2,14 +2,12 @@
 async function getLogs(start_time, end_time) {
     const response = await fetch(`/get_logs?start_time=${start_time}&end_time=${end_time}`);
     const logs = await response.json();
-    console.log(logs);
     return logs;
 }
 
 async function getAllLogs() {
     const response = await fetch('/get_logs');
     const logs = await response.json();
-    console.log(logs);
     return logs;
 }
 
@@ -53,32 +51,34 @@ async function refreshCurrentActivity() {
     populateCurrentActivity(activity);
 }
 
-async function logClick() {
-    await submitLog();
+async function refreshViews() { 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     refreshTable(startOfDay.getTime(), now.getTime());
     refreshLogTree(startOfDay.getTime(), now.getTime());
     refreshCurrentActivity();
+    populateLogTypeDropdown();
 }
 
 async function submitLog() {
     // get the text box and dropdown
     const textBox = document.getElementById('log-comment');
-    const dropdown = document.getElementById('log-type');
+    const dropdown = document.getElementById('log-type-dropdown');
     // get the value of the text box and dropdown
     const comment = textBox.value;
-    const logType = dropdown.value;
+    const logTypeId = dropdown.value;
     // send the value of the text box and dropdown to the server
     const response = await fetch(`/submit`, {
         method: 'POST',
-        body: JSON.stringify({ 'log-comment': comment, 'log-type': logType }),
+        body: JSON.stringify({ 'log-comment': comment, 'log-type-id': logTypeId }),
         headers: {
             'Content-Type': 'application/json'
         }
     });
     // clear the text box
     textBox.value = '';
+    // refresh the table
+    refreshViews();
     return response;
 }
 
@@ -86,15 +86,8 @@ async function getLogTree(start_time, end_time) {
     // paramaters are start_time and end_time, midnight to now
     const response = await fetch(`/get_log_tree?start_time=${start_time}&end_time=${end_time}`);
     const tree = await response.json();
-    console.log(tree);
     return tree;
 }
-
-// each parent is a div (flex column) wit a flex row at the top, giving the id and type and comment
-//      make a function for returning an element with the proper nesting and class and text, given log data
-//          that function should either return just the log, or wrap it in a div and recursively append children
-//          That way I just iterate through the top level of the array and call the function on each one
-// so it goes parent div (flex column) log element (just text) and then a flex row
 
 function makeLogElement(log) {
     logText = `<b>${log.id}-${log.log_type}</b>: ${log.comment}`;
@@ -118,7 +111,6 @@ function populateLogTree(tree) {
     const treeDiv = document.getElementById('log-tree');
     treeDiv.innerHTML = '';
     tree.forEach(log => {
-        console.log(log);
         treeDiv.appendChild(makeLogElement(log));
     });
 }
@@ -126,4 +118,52 @@ function populateLogTree(tree) {
 async function refreshLogTree(start_time, end_time) {
     const tree = await getLogTree(start_time, end_time);
     populateLogTree(tree);
+}
+
+async function getLogTypes() {
+    const response = await fetch('/get_log_types');
+    const types = await response.json();
+    return types;
+}
+
+async function populateLogTypeList() {
+    list = document.getElementById('log-types-list');
+    list.innerHTML = '';
+    const types = await getLogTypes();
+    types.forEach(type => {
+        const item = document.createElement('li');
+        item.innerHTML = type.log_type;
+        item.dataset.type_id = type.id;
+        item.addEventListener('click', highlightItem);
+        list.appendChild(item);
+    });
+}
+
+async function populateLogTypeDropdown() {
+    dropdown = document.getElementById('log-type-dropdown');
+    dropdown.innerHTML = '';
+    const types = await getLogTypes();
+    types.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.id;
+        option.innerHTML = type.log_type;
+        dropdown.appendChild(option);
+    });
+}
+
+// event listener to add "highlighted" to the classlist of the item clicked
+function highlightItem(event) {
+    const item = event.target;
+    item.classList.toggle('highlighted');
+}
+
+function deleteHighlighted() {
+    const highlighted = document.querySelectorAll('.highlighted');
+    highlighted.forEach(item => {
+        const id = item.dataset.type_id;
+        fetch(`/delete_log_type?id=${id}`, {
+            method: 'POST'
+        });
+    });
+    populateLogTypeList();
 }

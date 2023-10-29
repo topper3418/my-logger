@@ -13,10 +13,18 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
 db = SQLAlchemy(app)
 
+class LogType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    log_type = db.Column(db.String(50))
+
+    def __repr__(self):
+        return f'<LogTypes {self.id} - {self.log_type}>'
+    
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime)
-    log_type = db.Column(db.String(50))
+    log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'))
+    log_type = db.relationship('LogType', backref='logs', lazy=True)
     comment = db.Column(db.String(255))
     parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
     parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
@@ -32,7 +40,12 @@ class Activity(db.Model):
 
     def __repr__(self):
         return f'<Activity {self.timestamp}, {self.active_log_id}>'
-    
+
+def get_log_type(log_type: str) -> LogType|None:
+    """returns the LogType object with the given log_type, or None if it doesn't exist"""
+    with Session() as session:
+        result =  session.query(LogType).filter(LogType.log_type == log_type).first()
+    return result
 
 with app.app_context():
     Session = sessionmaker(bind=db.engine)
@@ -42,14 +55,6 @@ with app.app_context():
 def index():
     return render_template('index.html')
 
-def add_log(log_type, comment):
-    new_log = Log(timestamp=datetime.now(),
-                  log_type=log_type, 
-                  comment=comment)
-    with Session() as session:
-        session.add(new_log)
-        session.commit()
-
 class CommentParser:
     """takes in a comment, and makes available the following properties:
     - comment_type (if specified)
@@ -57,7 +62,7 @@ class CommentParser:
     - comment (the comment itself, stripped of special commands)"""
     def __init__(self, comment: str):
         self.comment = comment
-        self.comment_type = None
+        self.log_type_id = None
         self.parent_id = None
         self.state_command = False
         self.parse_comment()
@@ -80,25 +85,25 @@ class CommentParser:
                 if self.parent_id:
                     raise ValueError('Too many parent ids in comment')
                 self.parent_id = int(command)
-            elif command in ['thought', 'action', 'task', 'error', 'success', 
-                             'completion', 'learning', 'break', 'distraction', 
-                             'issue']:
-                if self.comment_type:
-                    raise ValueError('Too many comment types in comment')
-                self.comment_type = command
             elif not command:
                 self.state_command = True
             else:
-                raise ValueError(f'Invalid command in comment: {command}')
+                log_type = get_log_type(command)
+                if log_type:
+                    if self.log_type_id:
+                        raise ValueError('Too many log types in comment')
+                    self.log_type_id = log_type.id
+                else:
+                    raise ValueError(f'Invalid command in comment: {command}')
         self.comment = comment.strip()
         if not self.state_command:
             self.state_command = not self.comment and\
-                                 not self.comment_type and\
+                                 not self.log_type_id and\
                                  self.parent_id
 
-def add_log(log_type, comment, parent_id):
+def add_log(log_type_id, comment, parent_id):
     new_log = Log(timestamp=datetime.now(),
-                  log_type=log_type, 
+                  log_type_id=log_type_id, 
                   comment=comment,
                   parent_id=parent_id)
     with Session() as session:
@@ -120,11 +125,32 @@ def submit():
         set_activity(parser.parent_id)
     else:
         # if the parser picks up a comment type, use that
-        log_type = parser.comment_type or data['log-type']
+        log_type = parser.log_type_id or data['log-type-id']
         activity = get_activity()
-        parent_id = parser.parent_id or None if not activity else get_activity().id
+        parent_id = parser.parent_id or (None if not activity else activity.id)
         add_log(log_type, parser.comment, parent_id)
     return redirect('/')
+
+@app.route('/configure_log_types', methods=['GET', 'POST'])
+def configure_log_types():
+    if request.method == 'GET':
+        return render_template('configure_log_types.html')
+    elif request.method == 'POST':
+        data = request.form
+        log_type = LogType(log_type=data['log-type'])
+        with Session() as session:
+            session.add(log_type)
+            session.commit()
+        return redirect('/configure_log_types')
+
+@app.route('/delete_log_type', methods=['POST'])
+def delete_log_type():
+    data = request.args
+    with Session() as session:
+        log_type = session.query(LogType).filter(LogType.id == data['id']).first()
+        session.delete(log_type)
+        session.commit()
+    return redirect('/configure_log_types')
 
 @app.route('/get_logs', methods=['GET'])
 def get_logs():
@@ -138,12 +164,18 @@ def get_logs():
             logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
         else:
             logs = session.query(Log).all()
-    return jsonify([{'id': log.id, 
-                     'timestamp': log.timestamp, 
-                     'log_type': log.log_type, 
-                     'comment': log.comment,
-                     'parent_id': log.parent_id} 
-                     for log in logs])
+        data = [{'id': log.id,
+                    'timestamp': log.timestamp,
+                    'log_type': log.log_type.log_type if log.log_type else None,
+                    'comment': log.comment,
+                    'parent_id': log.parent_id} for log in logs]
+    return jsonify(data)
+
+@app.route('/get_log_types', methods=['GET'])
+def get_log_types():
+    with Session() as session:
+        log_types = session.query(LogType).all()
+    return jsonify([{'id': log_type.id, 'log_type': log_type.log_type} for log_type in log_types])
 
 @app.route('/get_log_table', methods=['GET'])
 def get_log_table(): 
@@ -221,7 +253,7 @@ def assemble_tree(session, log: Log) -> dict:
     children = get_children(session, log)
     dict_out = {'id': log.id,
             'timestamp': log.timestamp,
-            'log_type': log.log_type,
+            'log_type': log.log_type.log_type if log.log_type else None,
             'comment': log.comment,
             'parent_id': log.parent_id if log.parent_id else None,
             'children': [assemble_tree(session, child) for child in children]}
