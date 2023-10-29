@@ -16,7 +16,6 @@ async function getAllLogs() {
 async function getCurrentactivity() {
     const response = await fetch('/current_activity');
     const activity = await response.json();
-    console.log('current activity', activity);
     return activity;
 }
 
@@ -59,6 +58,7 @@ async function logClick() {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     refreshTable(startOfDay.getTime(), now.getTime());
+    refreshLogTree(startOfDay.getTime(), now.getTime());
     refreshCurrentActivity();
 }
 
@@ -77,9 +77,53 @@ async function submitLog() {
             'Content-Type': 'application/json'
         }
     });
-    console.log(response);
     // clear the text box
     textBox.value = '';
     return response;
 }
 
+async function getLogTree(start_time, end_time) {
+    // paramaters are start_time and end_time, midnight to now
+    const response = await fetch(`/get_log_tree?start_time=${start_time}&end_time=${end_time}`);
+    const tree = await response.json();
+    console.log(tree);
+    return tree;
+}
+
+// each parent is a div (flex column) wit a flex row at the top, giving the id and type and comment
+//      make a function for returning an element with the proper nesting and class and text, given log data
+//          that function should either return just the log, or wrap it in a div and recursively append children
+//          That way I just iterate through the top level of the array and call the function on each one
+// so it goes parent div (flex column) log element (just text) and then a flex row
+
+function makeLogElement(log) {
+    logText = `<b>${log.id}-${log.log_type}</b>: ${log.comment}`;
+    const logElement = document.createElement('p');
+    logElement.classList.add('log-element');
+    logElement.innerHTML = logText;
+    // determine if it has children
+    if (log.children) {
+        // if it has children, make a div for them and populate it
+        const childrenDiv = document.createElement('div');
+        childrenDiv.classList.add('children');
+        log.children.forEach(child => {
+            childrenDiv.appendChild(makeLogElement(child));
+        });
+        logElement.appendChild(childrenDiv);
+    }
+    return logElement;
+}
+
+function populateLogTree(tree) {
+    const treeDiv = document.getElementById('log-tree');
+    treeDiv.innerHTML = '';
+    tree.forEach(log => {
+        console.log(log);
+        treeDiv.appendChild(makeLogElement(log));
+    });
+}
+
+async function refreshLogTree(start_time, end_time) {
+    const tree = await getLogTree(start_time, end_time);
+    populateLogTree(tree);
+}

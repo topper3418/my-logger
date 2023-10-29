@@ -7,6 +7,7 @@ from flask import current_app
 
 from datetime import datetime, date
 from icecream import ic
+from typing import List
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
@@ -21,7 +22,7 @@ class Log(db.Model):
     parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
 
     def __repr__(self):
-        return f'<Log {self.timestamp}, {self.comment}>'
+        return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - {self.comment}>'
 
 class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -114,7 +115,6 @@ def set_activity(log_id: int=None):
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.get_json()
-    ic(data)
     parser = CommentParser(data['log-comment'])
     if parser.state_command:
         set_activity(parser.parent_id)
@@ -136,7 +136,6 @@ def get_logs():
     with Session() as session:
         if start_time and end_time:
             logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
-            ic(logs)
         else:
             logs = session.query(Log).all()
     return jsonify([{'id': log.id, 
@@ -201,6 +200,46 @@ def get_state_history():
                      'timestamp': activity.timestamp, 
                      'active_log_id': activity.active_log_id} 
                      for activity in activities])
+
+def get_logs(session, start_time: datetime=None, end_time: datetime=None) -> List[Log]:
+    """returns a list of logs between the given start and end times"""
+    if start_time and end_time:
+        return session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
+    else:
+        return session.query(Log).all()
+
+def has_children(session, log: Log) -> bool:
+    """returns True if the log has children, False otherwise"""
+    return bool(session.query(Log).filter(Log.parent_id == log.id).first())
+
+def get_children(session, log: Log) -> List[Log]:
+    """returns a list of the children of the given log"""
+    return session.query(Log).filter(Log.parent_id == log.id).all()
+
+def assemble_tree(session, log: Log) -> dict:
+    """returns a dictionary representing the given log and its children"""
+    children = get_children(session, log)
+    dict_out = {'id': log.id,
+            'timestamp': log.timestamp,
+            'log_type': log.log_type,
+            'comment': log.comment,
+            'parent_id': log.parent_id if log.parent_id else None,
+            'children': [assemble_tree(session, child) for child in children]}
+    return dict_out
+
+@app.route('/get_log_tree', methods=['GET'])
+def get_log_tree():
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    if start_time and end_time:
+        start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+        end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+    with Session() as session:
+        logs = get_logs(session, start_time, end_time)
+        log_ids = [log.id for log in logs]
+        orphans = [log for log in logs if log.parent_id not in log_ids]
+        tree = [assemble_tree(session, orphan) for orphan in orphans]
+    return jsonify(tree)
 
 if __name__ == '__main__':
     app.run(debug=True)

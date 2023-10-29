@@ -25,6 +25,10 @@ table th, table td {
   padding: 8px;
 }
 
+table thead {
+  position: sticky;
+}
+
 table th {
   background-color: #f2f2f2;
 }
@@ -116,6 +120,12 @@ body {
 .table-column {
   overflow-y: scroll;
   max-height: calc(100vh - 350px);
+  align-content: flex-end;
+}
+
+.tree-column {
+  overflow-y: scroll;
+  max-height: calc(100vh - 350px);
 }
 
 .wrapper {
@@ -126,4 +136,17 @@ body {
   height: 100%;
   overflow: scroll;
   margin: 5px;
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-left: 20px;
+}
+
+.log-element {
+  text-align: left;
+  margin: 0;
+  padding: 0;
 }
