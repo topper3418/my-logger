@@ -90,7 +90,7 @@ async function submitLog() {
     // clear the text box
     textBox.value = '';
     // refresh the table
-    refreshViews();
+    refreshViewsV2();
     return response;
 }
 

@@ -9,98 +9,30 @@ from datetime import datetime, date
 from icecream import ic
 from typing import List
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
-db = SQLAlchemy(app)
+from app.comment_parser import CommentParser
+from app import app, db, Session
 
-class LogType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    log_type = db.Column(db.String(50))
-    color = db.Column(db.String(50))
+from app.models import Log, LogType, Activity
 
-    def __repr__(self):
-        return f'<LogTypes {self.id} - {self.log_type}>'
-    
-class Log(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'))
-    log_type = db.relationship('LogType', backref='logs', lazy=True)
-    comment = db.Column(db.String(255))
-    parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
-    parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
-
-    def __repr__(self):
-        return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - {self.comment}>'
-
-class Activity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    active_log_id = db.Column(db.Integer, db.ForeignKey('log.id'))
-    active_log = db.relationship('Log', backref='activity', lazy=True)
-
-    def __repr__(self):
-        return f'<Activity {self.timestamp}, {self.active_log_id}>'
-
-def get_log_type(log_type: str) -> LogType|None:
-    """returns the LogType object with the given log_type, or None if it doesn't exist"""
-    with Session() as session:
-        result =  session.query(LogType).filter(LogType.log_type == log_type).first()
-    return result
 
 with app.app_context():
-    Session = sessionmaker(bind=db.engine)
     db.create_all()
+    default_log_types = [
+        LogType(log_type='thought', color='lightblue'),
+        LogType(log_type='task', color='orange'),
+        LogType(log_type='error', color='red'),
+        LogType(log_type='complete', color='green'),
+        LogType(log_type='distraction', color='purple')
+    ]
+    with Session() as session:
+        # Check if LogType table is empty
+        if not session.query(LogType).first():
+            session.add_all(default_log_types)
+            session.commit()
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
-class CommentParser:
-    """takes in a comment, and makes available the following properties:
-    - comment_type (if specified)
-    - parent_id (if specified)
-    - comment (the comment itself, stripped of special commands)"""
-    def __init__(self, comment: str):
-        self.comment = comment
-        self.log_type_id = None
-        self.parent_id = None
-        self.state_command = False
-        self.parse_comment()
-    
-    def parse_comment(self):
-        """strips the comment of any special commands"""
-        comment = self.comment
-        commands = []
-        while '[' in comment and ']' in comment:
-            # get the text between the brackets
-            bracket_text = comment[comment.find('[')+1:comment.find(']')]
-            commands.append(bracket_text)
-            # remove the text between the brackets
-            comment = comment.replace(f'[{bracket_text}]', '')
-        # verify the commands are valid
-        if len(commands) > 2:
-            raise ValueError('Too many commands in comment')
-        for command in commands:
-            if command.isnumeric():
-                if self.parent_id:
-                    raise ValueError('Too many parent ids in comment')
-                self.parent_id = int(command)
-            elif not command:
-                self.state_command = True
-            else:
-                log_type = get_log_type(command)
-                if log_type:
-                    if self.log_type_id:
-                        raise ValueError('Too many log types in comment')
-                    self.log_type_id = log_type.id
-                else:
-                    raise ValueError(f'Invalid command in comment: {command}')
-        self.comment = comment.strip()
-        if not self.state_command:
-            self.state_command = not self.comment and\
-                                 not self.log_type_id and\
-                                 self.parent_id
 
 def add_log(log_type_id, comment, parent_id):
     new_log = Log(timestamp=datetime.now(),
