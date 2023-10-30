@@ -6,98 +6,37 @@ from sqlalchemy.orm import sessionmaker
 from flask import current_app
 
 from datetime import datetime, date
+from icecream import ic
 from typing import List
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///logs.db'
-db = SQLAlchemy(app)
+from app.comment_parser import parse_comment
+from app import app, db, Session
 
-class Log(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    log_type = db.Column(db.String(50))
-    comment = db.Column(db.String(255))
-    parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
-    parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
+from app.models import Log, LogType, Activity
 
-    def __repr__(self):
-        return f'<Log {self.timestamp}, {self.comment}>'
-
-class Activity(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
-    active_log_id = db.Column(db.Integer, db.ForeignKey('log.id'))
-    active_log = db.relationship('Log', backref='activity', lazy=True)
-
-    def __repr__(self):
-        return f'<Activity {self.timestamp}, {self.active_log_id}>'
-    
 
 with app.app_context():
-    Session = sessionmaker(bind=db.engine)
     db.create_all()
+    default_log_types = [
+        LogType(log_type='thought', color='lightblue'),
+        LogType(log_type='task', color='orange'),
+        LogType(log_type='error', color='red'),
+        LogType(log_type='complete', color='green'),
+        LogType(log_type='distraction', color='purple')
+    ]
+    with Session() as session:
+        # Check if LogType table is empty
+        if not session.query(LogType).first():
+            session.add_all(default_log_types)
+            session.commit()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-def add_log(log_type, comment):
+def add_log(log_type_id, comment, parent_id):
     new_log = Log(timestamp=datetime.now(),
-                  log_type=log_type, 
-                  comment=comment)
-    with Session() as session:
-        session.add(new_log)
-        session.commit()
-
-class CommentParser:
-    """takes in a comment, and makes available the following properties:
-    - comment_type (if specified)
-    - parent_id (if specified)
-    - comment (the comment itself, stripped of special commands)"""
-    def __init__(self, comment: str):
-        self.comment = comment
-        self.comment_type = None
-        self.parent_id = None
-        self.state_command = False
-        self.parse_comment()
-    
-    def parse_comment(self):
-        """strips the comment of any special commands"""
-        comment = self.comment
-        commands = []
-        while '[' in comment and ']' in comment:
-            # get the text between the brackets
-            bracket_text = comment[comment.find('[')+1:comment.find(']')]
-            commands.append(bracket_text)
-            # remove the text between the brackets
-            comment = comment.replace(f'[{bracket_text}]', '')
-        # verify the commands are valid
-        if len(commands) > 2:
-            raise ValueError('Too many commands in comment')
-        for command in commands:
-            if command.isnumeric():
-                if self.parent_id:
-                    raise ValueError('Too many parent ids in comment')
-                self.parent_id = int(command)
-            elif command in ['thought', 'action', 'task', 'error', 'success', 
-                             'completion', 'learning', 'break', 'distraction', 
-                             'issue']:
-                if self.comment_type:
-                    raise ValueError('Too many comment types in comment')
-                self.comment_type = command
-            elif not command:
-                self.state_command = True
-            else:
-                raise ValueError(f'Invalid command in comment: {command}')
-        self.comment = comment.strip()
-        if not self.state_command:
-            self.state_command = not self.comment and\
-                                 not self.comment_type and\
-                                 self.parent_id
-
-def add_log(log_type, comment, parent_id):
-    new_log = Log(timestamp=datetime.now(),
-                  log_type=log_type, 
+                  log_type_id=log_type_id, 
                   comment=comment,
                   parent_id=parent_id)
     with Session() as session:
@@ -113,17 +52,44 @@ def set_activity(log_id: int=None):
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    data = request.form
-    parser = CommentParser(data['log-comment'])
-    if parser.state_command:
-        set_activity(parser.parent_id)
+    data = request.get_json()
+    comment = parse_comment(data['log-comment'])
+    # state commands have no comment string, so they only change the state
+    if comment.state_command:
+        set_activity(comment.parent_id)
     else:
-        # if the parser picks up a comment type, use that
-        log_type = parser.comment_type or data['log-type']
-        activity = get_activity()
-        parent_id = parser.parent_id or None if not activity else get_activity().id
-        add_log(log_type, parser.comment, parent_id)
+        # if the parser picks up a comment type, that overrides whats in the dropdown
+        log_type = comment.log_type_id or data['log-type-id']
+        # if the parser picks up a parent id, that overrides the current activity
+        if comment.parent_id == 0:  # 0 means the user wants an orphan comment
+            parent_id = None
+        elif comment.parent_id is None:  # none means the user did not specify parent
+            parent_id = get_activity().id  # (so use the current activity)
+        else:
+            parent_id = comment.parent_id  # otherwise use the parent id from the comment
+        add_log(log_type, comment.comment, parent_id)
     return redirect('/')
+
+@app.route('/configure_log_types', methods=['GET', 'POST'])
+def configure_log_types():
+    if request.method == 'GET':
+        return render_template('configure_log_types.html')
+    elif request.method == 'POST':
+        data = request.form
+        log_type = LogType(log_type=data['log-type'], color=data['color'])
+        with Session() as session:
+            session.add(log_type)
+            session.commit()
+        return redirect('/configure_log_types')
+
+@app.route('/delete_log_type', methods=['POST'])
+def delete_log_type():
+    data = request.args
+    with Session() as session:
+        log_type = session.query(LogType).filter(LogType.id == data['id']).first()
+        session.delete(log_type)
+        session.commit()
+    return redirect('/configure_log_types')
 
 @app.route('/get_logs', methods=['GET'])
 def get_logs():
@@ -135,15 +101,23 @@ def get_logs():
     with Session() as session:
         if start_time and end_time:
             logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
-            print(logs)
         else:
             logs = session.query(Log).all()
-    return jsonify([{'id': log.id, 
-                     'timestamp': log.timestamp, 
-                     'log_type': log.log_type, 
-                     'comment': log.comment,
-                     'parent_id': log.parent_id} 
-                     for log in logs])
+        data = [{'id': log.id,
+                    'timestamp': log.timestamp.strftime('%H:%M'),
+                    'log_type': log.log_type.log_type if log.log_type else None,
+                    'comment': log.comment,
+                    'parent_id': log.parent_id} for log in logs]
+    return jsonify(data)
+
+@app.route('/get_log_types', methods=['GET'])
+def get_log_types():
+    with Session() as session:
+        log_types = session.query(LogType).all()
+    return jsonify([{'id': log_type.id, 
+                     'log_type': log_type.log_type,
+                     'color': log_type.color} 
+                     for log_type in log_types])
 
 @app.route('/get_log_table', methods=['GET'])
 def get_log_table(): 
@@ -179,6 +153,19 @@ def get_activity() -> Log:
             current_activity = None
     return current_activity
 
+def get_span(session, activity: Activity) -> int:
+    """returns the amount of time between the given activity and the next one"""
+    next_activity = session.query(Activity).filter(Activity.id == activity.id + 1).first()
+    if next_activity:
+        return (next_activity.timestamp - activity.timestamp).total_seconds()
+    else:
+        return (datetime.now() - activity.timestamp).total_seconds()
+
+def get_active_duration(session, log_id: int) -> int:
+    """returns the amount of time between the given log and the next activity"""
+    active_spans = session.query(Activity).filter(Activity.active_log_id == log_id).all()
+    return sum([get_span(session, activity) for activity in active_spans])
+
 @app.route('/current_activity', methods=['GET'])
 def get_current_activity():
     current_activity = get_activity()
@@ -195,14 +182,84 @@ def get_activity_history(session, start_time: datetime=None, end_time: datetime=
 def get_state_history():
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
+    if start_time and end_time:
+        start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+        end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+
+    with Session() as session:
+        if start_time and end_time:
+            activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
+        else:
+            activities = session.query(Activity).all()
+        data = [{'id': activity.id, 
+                 'timestamp': activity.timestamp, 
+                 'duration': get_span(session, activity).total_seconds(),
+                 'active_log_id': activity.active_log_id} 
+                 for activity in activities]
+    return jsonify(data)
+
+def get_logs_helper(session, start_time: datetime=None, end_time: datetime=None) -> List[Log]:
+    """returns a list of logs between the given start and end times"""
+    if start_time and end_time:
+        return session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
+    else:
+        return session.query(Log).all()
+
+def has_children(session, log: Log) -> bool:
+    """returns True if the log has children, False otherwise"""
+    return bool(session.query(Log).filter(Log.parent_id == log.id).first())
+
+def get_children(session, log: Log) -> List[Log]:
+    """returns a list of the children of the given log"""
+    return session.query(Log).filter(Log.parent_id == log.id).all()
+
+def assemble_tree(session, log: Log) -> dict:
+    """returns a dictionary representing the given log and its children"""
+    children = get_children(session, log)
+    has_complete = any(child.log_type.log_type == 'complete' for child in children)
+    dict_out = {'id': log.id,
+                'timestamp': log.timestamp,
+                'log_type': log.log_type.log_type if log.log_type else None,
+                'comment': log.comment,
+                'parent_id': log.parent_id if log.parent_id else None,
+                'complete': has_complete,
+                'children': [assemble_tree(session, child) for child in children]}
+    return dict_out
+
+@app.route('/get_log_tree', methods=['GET'])
+def get_log_tree():
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    if start_time and end_time:
+        start_time = datetime.fromtimestamp(int(start_time)/1000.0)
+        end_time = datetime.fromtimestamp(int(end_time)/1000.0)
+    with Session() as session:
+        logs = get_logs_helper(session, start_time, end_time)
+        log_ids = [log.id for log in logs]
+        orphans = [log for log in logs if log.parent_id not in log_ids]
+        tree = [assemble_tree(session, orphan) for orphan in orphans]
+    return jsonify(tree)
+
+@app.route('/get_logs_v2', methods=['GET'])
+def get_logs_v2():
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
     start_time = datetime.fromtimestamp(int(start_time)/1000.0)
     end_time = datetime.fromtimestamp(int(end_time)/1000.0)
-    with Session() as session: 
-        activities = get_activity_history(session, start_time=start_time, end_time=end_time)
-    return jsonify([{'id': activity.id, 
-                     'timestamp': activity.timestamp, 
-                     'active_log_id': activity.active_log_id} 
-                     for activity in activities])
+
+    with Session() as session:
+        if start_time and end_time:
+            logs = session.query(Log).filter(Log.timestamp.between(start_time, end_time)).all()
+        else:
+            logs = session.query(Log).all()
+        data = [{'id': log.id,
+                 'timestamp': log.timestamp.strftime('%H:%M'),
+                 'log_type': log.log_type.log_type if log.log_type else None,
+                 'time_spent': get_active_duration(session, log.id),
+                 'comment': log.comment,
+                 'complete': any(child.log_type.log_type == 'complete' for child in get_children(session, log)),
+                 'parent_id': log.parent_id} for log in logs]
+    return jsonify(data)
 
 @app.route('/get_activity_history_table', methods=['GET'])
 def get_state_history_table():
