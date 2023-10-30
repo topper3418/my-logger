@@ -99,6 +99,13 @@ async function getLogTree(start_time, end_time) {
 
 function collapseChildrenHelper(element) {
     children = element.querySelector('.children');
+    // if its hidden, show it and set the time to be the non-cumulative time
+    logDurationElement = element.querySelector('.duration');
+    if (children.classList.contains('hidden')) {
+        logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.time_spent);
+    } else {
+        logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.total_time_spent);
+    }
     children.classList.toggle('hidden');
     element.classList.toggle('bordered');
 }
@@ -290,7 +297,10 @@ function makeLogTreeElementV2(log) {
     logIdElement.addEventListener('click', collapseChildren);
     // duration element
     const logDurationElement = document.createElement('p');
+    logDurationElement.classList.add('duration');
     logDurationElement.innerHTML = formatSeconds(log.time_spent);
+    logDurationElement.dataset.time_spent = log.time_spent;
+    logDurationElement.dataset.total_time_spent = log.total_time_spent;
     // comment element
     const logCommentElement = document.createElement('p');
     logCommentElement.innerHTML = log.comment;
@@ -335,6 +345,17 @@ function get_children(log, todayData) {
     return children;
 }
 
+function sum_time(tree_log) {
+    let time = tree_log.time_spent;
+    if (tree_log.children) {
+        tree_log.children.forEach(child => {
+            sum_time(child);
+            time += child.total_time_spent;
+        });
+    }
+    tree_log.total_time_spent = time;
+}
+
 function get_orphans(todayData) {
     const orphans = [];
     todayData.forEach(log => {
@@ -352,11 +373,15 @@ function make_into_tree(todayData) {
     tree.forEach(log => {
         log.children = get_children(log, todayData);
     });
+    // loop through again, getting cumulative time
+    tree.forEach(log => {
+        sum_time(log);
+    });
+    console.log(tree);
     return tree;
 }
 
 function populateTreeV2(todayData) {
-    console.log(todayData);
     const treeDiv = document.getElementById('log-tree');
     const collapsed = document.querySelectorAll('.children.hidden');
     const collapsedIds = [];
