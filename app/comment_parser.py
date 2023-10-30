@@ -1,53 +1,60 @@
-from app.db_funcs import get_log_type
+from app.db_funcs import get_log_type, get_log_types
 
+from typing import Tuple, List
+from dataclasses import dataclass
 
-class CommentParser:
-    """takes in a comment, and makes available the following properties:
-    - comment_type (if specified)
-    - parent_id (if specified)
-    - comment (the comment itself, stripped of special commands)"""
-    def __init__(self, comment: str):
-        self.comment = comment
-        self.log_type_id = None
-        self.parent_id = False
-        self.state_command = False
-        self.parse_comment()
+def strip_submission(submission: str) -> Tuple[List[str], str]:
+    """takes in a comment, and returns a list of commands, and the stripped comment"""
+    commands = []
+    while '[' in submission and ']' in submission:
+        # get the text between the brackets
+        bracket_text = submission[submission.find('[')+1:submission.find(']')]
+        commands.append(bracket_text)
+        # remove the text between the brackets
+        submission = submission.replace(f'[{bracket_text}]', '')
+    return commands, submission.strip()
+
+def get_command_type(command: str) -> str:
+    """takes in a command, and returns the type of command it is"""
+    if command.isnumeric() or not command:
+        return 'parent_id'
+    if command in get_log_types():
+        return 'log_type'
+
+@dataclass
+class Comment:
+    comment: str
+    log_type_id: int = None
+    parent_id: int = None
+    state_command: bool = False
+
     
-    def parse_comment(self):
-        """strips the comment of any special commands"""
-        comment = self.comment
-        commands = []
-        while '[' in comment and ']' in comment:
-            # get the text between the brackets
-            bracket_text = comment[comment.find('[')+1:comment.find(']')]
-            commands.append(bracket_text)
-            # remove the text between the brackets
-            comment = comment.replace(f'[{bracket_text}]', '')
-        self.comment = comment.strip()
-        # verify the commands are valid
-        if len(commands) > 2:
-            raise ValueError('Too many commands in comment')
-        for command in commands:
-            # if theres a number, it's a parent id
-            if command.isnumeric():
-                if self.parent_id:
-                    raise ValueError('Too many parent ids in comment')
-                self.parent_id = int(command)
-            # if it's empty, and theres no comment, it's a state command to "unfocus"
-            elif not command and not self.comment:
-                self.state_command = True
-            # if its empty and there is a comment, it's an orphaned comment
-            elif not command and self.comment:
-                self.parent_id = None
-            else:
-                log_type = get_log_type(command)
-                if log_type:
-                    if self.log_type_id:
-                        raise ValueError('Too many log types in comment')
-                    self.log_type_id = log_type.id
-                else:
-                    raise ValueError(f'Invalid command in comment: {command}')
-        if not self.state_command:
-            self.state_command = not self.comment and\
-                                 not self.log_type_id and\
-                                 self.parent_id
+def parse_comment(comment: str) -> Comment:
+    """strips the comment of any special commands"""
+    commands, comment = strip_submission(comment)
+    # verify the commands are valid
+    # currently only 2 commands at a time are supported
+    if len(commands) > 2:
+        raise ValueError('Too many commands in comment')
+    # only one command can be a parent_id
+    if len([command for command in commands if get_command_type(command) == 'parent_id']) > 1:
+        raise ValueError('Too many parent ids in comment')
+    # only one command can be a log_type
+    if len([command for command in commands if get_command_type(command) == 'log_type']) > 1:
+        raise ValueError('Too many log types in comment')
+    # make sure there are no invalid commands
+    if any([get_command_type(command) == None for command in commands]):
+        raise ValueError('Invalid command in comment')
+    # set variables from the commands
+    parent_id = None
+    log_type_id = None
+    for command in commands:
+        # if theres a number, it's a parent id
+        if get_command_type(command) == 'parent_id':
+            parent_id = int(command)
+        elif get_command_type(command) == 'log_type':
+            log_type_id = get_log_type(command).id
+    # state command is for submissions that are only parent id's
+    state_command = parent_id and not (comment and log_type_id) 
+
+    return Comment(comment, log_type_id, parent_id, state_command)

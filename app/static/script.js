@@ -62,13 +62,9 @@ async function refreshCurrentActivity() {
 async function refreshViews() { 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    console.log('refreshing current activity')
     refreshCurrentActivity();
-    console.log('refreshing dropdown')
     populateLogTypeDropdown();
-    console.log('refreshing log table')
     refreshTable(startOfDay.getTime(), now.getTime());
-    console.log('refreshing log tree')
     refreshLogTree(startOfDay.getTime(), now.getTime());
 }
 
@@ -101,14 +97,16 @@ async function getLogTree(start_time, end_time) {
     return tree;
 }
 
+function collapseChildrenHelper(element) {
+    children = element.querySelector('.children');
+    children.classList.toggle('hidden');
+    element.classList.toggle('bordered');
+}
+
 function collapseChildren(event) {
     // get the parent element
     const parent = event.target.parentElement.parentElement.parentElement;
-    // get the element with the class of children
-    const children = parent.querySelector('.children');
-    // toggle the class of hidden
-    children.classList.toggle('hidden');
-    parent.classList.toggle('bordered');
+    collapseChildrenHelper(parent);
 }
 
 function getColor(log) {
@@ -206,8 +204,6 @@ async function populateLogTypeDropdown() {
     dropdown.innerHTML = '';
     const types = await getLogTypes();
     dropdown.dataset.log_types = JSON.stringify(types);
-    console.log(types);
-    console.log(dropdown.dataset.log_types);
     types.forEach(type => {
         const option = document.createElement('option');
         option.value = type.id;
@@ -267,22 +263,24 @@ function populateTableV2(todayData) {
 }
 
 function makeLogTreeElementV2(log) {
+    // create the wrapper that it will all go in
     const logWrapper = document.createElement('div');
     logWrapper.classList.add('column-container');
-    logWrapper.style.padding = '0';
+    // create the element that will hold the log
     const logElement = document.createElement('div');
     logElement.classList.add('row-cluster');
     logElement.classList.add('log-element');
     logElement.dataset.log_id = log.id;
     logElement.style.color = getColor(log);
     logWrapper.appendChild(logElement);
-
+    // get the collapsed ids
     const treeDiv = document.getElementById('log-tree');
     if (!treeDiv.dataset.collapsed) {
         treeDiv.dataset.collapsed = '';
     }
     const collapsedIds = treeDiv.dataset.collapsed.split(',');
-    
+    // create the elements that will go in the log element
+    // id element
     const logIdElement = document.createElement('p');
     logIdElement.innerHTML = `<b>${log.id}</b>: `;
     logIdElement.style.cursor = 'pointer';
@@ -290,19 +288,28 @@ function makeLogTreeElementV2(log) {
         logIdElement.style.color = 'green';
     }
     logIdElement.addEventListener('click', collapseChildren);
-    
+    // duration element
     const logDurationElement = document.createElement('p');
-    logDurationElement.innerHTML = log.time_spent;
-
+    logDurationElement.innerHTML = formatSeconds(log.time_spent);
+    // comment element
     const logCommentElement = document.createElement('p');
     logCommentElement.innerHTML = log.comment;
     logCommentElement.style.flexGrow = 1;
-    
+    // remove margins and padding
+    logIdElement.style.margin = '0';
+    logIdElement.style.padding = '0';
+    logIdElement.style.marginRight = '15px';
+    logDurationElement.style.margin = '0';
+    logDurationElement.style.padding = '0';
+    logDurationElement.style.marginLeft = '15px';
+    logCommentElement.style.margin = '0';
+    logCommentElement.style.padding = '0';
+    // append the elements to the log element
     logElement.appendChild(logIdElement);
     logElement.appendChild(logCommentElement);
     logElement.appendChild(logDurationElement);
     
-    // determine if it has children
+    // determine if it has children, add them recursively
     if (log.children) {
         // if it has children, make a div for them and populate it
         const childrenDiv = document.createElement('div');
@@ -314,8 +321,7 @@ function makeLogTreeElementV2(log) {
     }
 
     if (collapsedIds.includes(log.id.toString())) {
-        logWrapper.querySelector('.children').classList.toggle('hidden');
-        logWrapper.classList.toggle('bordered');
+        collapseChildrenHelper(logElement);
     }
     
     return logWrapper;
@@ -330,7 +336,6 @@ function get_children(log, todayData) {
 }
 
 function get_orphans(todayData) {
-    console.log(todayData)
     const orphans = [];
     todayData.forEach(log => {
         // if no parent id, or parent id not in data
@@ -351,8 +356,15 @@ function make_into_tree(todayData) {
 }
 
 function populateTreeV2(todayData) {
+    console.log(todayData);
     const treeDiv = document.getElementById('log-tree');
+    const collapsed = document.querySelectorAll('.children.hidden');
+    const collapsedIds = [];
+    collapsed.forEach(element => {
+        collapsedIds.push(element.parentElement.querySelector('.log-element').dataset.log_id);
+    });
     treeDiv.innerHTML = '';
+    treeDiv.dataset.collapsed = collapsedIds;
     treeData = make_into_tree(todayData);
     treeData.forEach(log => {
         treeDiv.appendChild(makeLogTreeElementV2(log));
@@ -362,14 +374,17 @@ function populateTreeV2(todayData) {
 async function refreshViewsV2() { 
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    console.log('refreshing current activity')
     refreshCurrentActivity();
-    console.log('refreshing dropdown')
     populateLogTypeDropdown();
-    console.log('getting data');
     const todayData = await getTodayData();
-    console.log('refreshing log tree')
     populateTreeV2(todayData);
-    console.log('refreshing log table')
     populateTableV2(todayData);
+}
+
+function formatSeconds(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const formattedHours = hours.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    return `${formattedHours}:${formattedMinutes}`;
 }

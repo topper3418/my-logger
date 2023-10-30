@@ -9,7 +9,7 @@ from datetime import datetime, date
 from icecream import ic
 from typing import List
 
-from app.comment_parser import CommentParser
+from app.comment_parser import parse_comment
 from app import app, db, Session
 
 from app.models import Log, LogType, Activity
@@ -53,15 +53,21 @@ def set_activity(log_id: int=None):
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.get_json()
-    parser = CommentParser(data['log-comment'])
-    if parser.state_command:
-        set_activity(parser.parent_id)
+    comment = parse_comment(data['log-comment'])
+    # state commands have no comment string, so they only change the state
+    if comment.state_command:
+        set_activity(comment.parent_id)
     else:
-        # if the parser picks up a comment type, use that
-        log_type = parser.log_type_id or data['log-type-id']
-        activity = get_activity()
-        parent_id = parser.parent_id or (None if not activity else activity.id)
-        add_log(log_type, parser.comment, parent_id)
+        # if the parser picks up a comment type, that overrides whats in the dropdown
+        log_type = comment.log_type_id or data['log-type-id']
+        # if the parser picks up a parent id, that overrides the current activity
+        if comment.parent_id == 0:  # 0 means the user wants an orphan comment
+            parent_id = None
+        elif comment.parent_id is None:  # none means the user did not specify parent
+            parent_id = get_activity().id  # (so use the current activity)
+        else:
+            parent_id = comment.parent_id  # otherwise use the parent id from the comment
+        add_log(log_type, comment.comment, parent_id)
     return redirect('/')
 
 @app.route('/configure_log_types', methods=['GET', 'POST'])
@@ -244,6 +250,7 @@ def get_logs_v2():
                  'log_type': log.log_type.log_type if log.log_type else None,
                  'time_spent': get_active_duration(session, log.id),
                  'comment': log.comment,
+                 'complete': any(child.log_type.log_type == 'complete' for child in get_children(session, log)),
                  'parent_id': log.parent_id} for log in logs]
     return jsonify(data)
 
