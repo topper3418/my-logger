@@ -127,16 +127,17 @@ body {
   justify-content: space-between;
 }
 
+.center-row {
+  max-height: calc(100vh - 400px);
+}
+
 .table-column {
   overflow-y: scroll;
-  max-height: calc(100vh - 400px);
-  align-items: flex-end;
   width: 20%;
 }
 
 .tree-column {
   overflow-y: scroll;
-  max-height: calc(100vh - 400px);
   width: 33%;
 }
 
@@ -144,7 +145,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
+  align-items: stretch;
   height: 100%;
   overflow: scroll;
   margin: 5px;

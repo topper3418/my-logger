@@ -1,5 +1,8 @@
 from app import db
 
+from dataclasses import dataclass
+from datetime import datetime
+
 class LogType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     log_type = db.Column(db.String(50))
@@ -30,3 +33,15 @@ class Activity(db.Model):
         return f'<Activity {self.timestamp}, {self.active_log_id}>'
 
 
+@dataclass
+class Comment:
+    comment: str
+    log_type_id: int = None
+    parent_id: int = None
+    state_command: bool = False
+
+
+@dataclass
+class TimeSpan:
+    start: datetime
+    end: datetime

@@ -1,7 +1,7 @@
-from app.db_funcs import get_log_type, get_log_types
+from app.db_funcs import get_log_type_id, get_log_types
+from app.models import Comment
 
 from typing import Tuple, List
-from dataclasses import dataclass
 from icecream import ic
 
 def strip_submission(submission: str) -> Tuple[List[str], str]:
@@ -22,22 +22,18 @@ def get_command_type(command: str) -> str:
     if command in get_log_types():
         return 'log_type'
     
+    
 def get_parent_id(parent_id_command: str) -> int:
     if not parent_id_command:
         return 0
     return int(parent_id_command)
 
-@dataclass
-class Comment:
-    comment: str
-    log_type_id: int = None
-    parent_id: int = None
-    state_command: bool = False
-
     
 def parse_comment(comment: str) -> Comment:
     """strips the comment of any special commands"""
+    ic(comment)
     commands, comment = strip_submission(comment)
+    ic(comment, commands)
     # verify the commands are valid
     # currently only 2 commands at a time are supported
     if len(commands) > 2:
@@ -59,7 +55,7 @@ def parse_comment(comment: str) -> Comment:
         if get_command_type(command) == 'parent_id':
             parent_id = get_parent_id(command)
         elif get_command_type(command) == 'log_type':
-            log_type_id = get_log_type(command).id
+            log_type_id = get_log_type_id(command)
     # state command is for submissions that are only parent id's
     state_command = parent_id and not comment and not log_type_id
 
