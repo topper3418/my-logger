@@ -54,19 +54,21 @@ def set_activity(log_id: int=None):
 def submit():
     data = request.get_json()
     comment = parse_comment(data['log-comment'])
+    ic(comment)
     # state commands have no comment string, so they only change the state
     if comment.state_command:
         set_activity(comment.parent_id)
     else:
         # if the parser picks up a comment type, that overrides whats in the dropdown
         log_type = comment.log_type_id or data['log-type-id']
+        current_activity = get_activity()
         # if the parser picks up a parent id, that overrides the current activity
         if comment.parent_id == 0:  # 0 means the user wants an orphan comment
             parent_id = None
-        elif comment.parent_id is None:  # none means the user did not specify parent
-            parent_id = get_activity().id  # (so use the current activity)
-        else:
-            parent_id = comment.parent_id  # otherwise use the parent id from the comment
+        elif comment.parent_id is None and current_activity:  # none means the user did not specify parent
+            parent_id = current_activity.id # (so use the current activity)
+        else:  # otherwise use the parent id from the comment
+            parent_id = comment.parent_id  # this will be None if the user does not specify, which is what we want. 
         add_log(log_type, comment.comment, parent_id)
     return redirect('/')
 
@@ -136,9 +138,9 @@ def get_log_table():
             logs = session.query(Log).all()
 
     # Create an HTML table from the data
-    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Type</th><th>Comment</th></tr>'
+    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Type</th><th>Comment</th><th>Parent ID</th></tr>'
     for log in logs:
-        table += f'<tr><td>{log.id}</td><td>{log.timestamp}</td><td>{log.log_type}</td><td>{log.comment}</td></tr>'
+        table += f'<tr><td>{log.id}</td><td>{log.timestamp}</td><td>{log.log_type}</td><td>{log.comment}</td><td>{log.parent_id}</td></tr>'
     table += '</table>'
 
     # Return the HTML table as a response
@@ -170,6 +172,13 @@ def get_active_duration(session, log_id: int) -> int:
 def get_current_activity():
     current_activity = get_activity()
     return jsonify(current_activity.comment if current_activity else 'no current task')
+
+def get_activity_history(session, start_time: datetime=None, end_time: datetime=None) -> List[Activity]:
+    if start_time and end_time:
+        activities = session.query(Activity).filter(Activity.timestamp.between(start_time, end_time)).all()
+    else:
+        activities = session.query(Activity).all()
+    return activities
 
 @app.route('/get_activity_history', methods=['GET'])
 def get_state_history():
@@ -253,6 +262,21 @@ def get_logs_v2():
                  'complete': any(child.log_type.log_type == 'complete' for child in get_children(session, log)),
                  'parent_id': log.parent_id} for log in logs]
     return jsonify(data)
+
+@app.route('/get_activity_history_table', methods=['GET'])
+def get_state_history_table():
+    start_time = datetime.now().date()
+    end_time = datetime.now()
+    # Create an HTML table from the data
+    table = '<table><tr><th>ID</th><th>Timestamp</th><th>Log Id</th><th>Comment</th></tr>'
+    with Session() as session:
+        activities = get_activity_history(session, start_time=start_time, end_time=end_time)
+        for activity in activities:
+            comment = None if not activity.active_log_id else activity.active_log.comment
+            table += f'<tr><td>{activity.id}</td><td>{activity.timestamp}</td><td>{activity.active_log_id}</td><td>{comment}</td></tr>'
+    table += '</table>'
+    return table
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -2,6 +2,7 @@ from app.db_funcs import get_log_type, get_log_types
 
 from typing import Tuple, List
 from dataclasses import dataclass
+from icecream import ic
 
 def strip_submission(submission: str) -> Tuple[List[str], str]:
     """takes in a comment, and returns a list of commands, and the stripped comment"""
@@ -20,6 +21,11 @@ def get_command_type(command: str) -> str:
         return 'parent_id'
     if command in get_log_types():
         return 'log_type'
+    
+def get_parent_id(parent_id_command: str) -> int:
+    if not parent_id_command:
+        return 0
+    return int(parent_id_command)
 
 @dataclass
 class Comment:
@@ -51,10 +57,10 @@ def parse_comment(comment: str) -> Comment:
     for command in commands:
         # if theres a number, it's a parent id
         if get_command_type(command) == 'parent_id':
-            parent_id = int(command)
+            parent_id = get_parent_id(command)
         elif get_command_type(command) == 'log_type':
             log_type_id = get_log_type(command).id
     # state command is for submissions that are only parent id's
-    state_command = parent_id and not (comment and log_type_id) 
+    state_command = parent_id and not comment and not log_type_id
 
     return Comment(comment, log_type_id, parent_id, state_command)

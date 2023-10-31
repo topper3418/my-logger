@@ -331,7 +331,7 @@ function makeLogTreeElementV2(log) {
     }
 
     if (collapsedIds.includes(log.id.toString())) {
-        collapseChildrenHelper(logElement);
+        collapseChildrenHelper(logWrapper);
     }
     
     return logWrapper;
@@ -377,7 +377,6 @@ function make_into_tree(todayData) {
     tree.forEach(log => {
         sum_time(log);
     });
-    console.log(tree);
     return tree;
 }
 
@@ -390,6 +389,7 @@ function populateTreeV2(todayData) {
     });
     treeDiv.innerHTML = '';
     treeDiv.dataset.collapsed = collapsedIds;
+    console.log(collapsedIds)
     treeData = make_into_tree(todayData);
     treeData.forEach(log => {
         treeDiv.appendChild(makeLogTreeElementV2(log));
