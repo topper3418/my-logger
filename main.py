@@ -54,19 +54,21 @@ def set_activity(log_id: int=None):
 def submit():
     data = request.get_json()
     comment = parse_comment(data['log-comment'])
+    ic(comment)
     # state commands have no comment string, so they only change the state
     if comment.state_command:
         set_activity(comment.parent_id)
     else:
         # if the parser picks up a comment type, that overrides whats in the dropdown
         log_type = comment.log_type_id or data['log-type-id']
+        current_activity = get_activity()
         # if the parser picks up a parent id, that overrides the current activity
         if comment.parent_id == 0:  # 0 means the user wants an orphan comment
             parent_id = None
-        elif comment.parent_id is None:  # none means the user did not specify parent
-            parent_id = get_activity().id  # (so use the current activity)
-        else:
-            parent_id = comment.parent_id  # otherwise use the parent id from the comment
+        elif comment.parent_id is None and current_activity:  # none means the user did not specify parent
+            parent_id = current_activity.id # (so use the current activity)
+        else:  # otherwise use the parent id from the comment
+            parent_id = comment.parent_id  # this will be None if the user does not specify, which is what we want. 
         add_log(log_type, comment.comment, parent_id)
     return redirect('/')
 
