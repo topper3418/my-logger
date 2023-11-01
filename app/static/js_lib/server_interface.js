@@ -69,3 +69,8 @@ async function getTodayData() {
 }
 
 
+async function getLog(log_id) {
+    const response = await fetch(`/log/${log_id}`);
+    return await response.json();
+}
+

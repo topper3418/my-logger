@@ -12,7 +12,7 @@
     <div class="wrapper">
         <h1>My Logger</h1>
         <h2 id="current_activity"></h2>
-        <div class = "row-container">
+        <div class="row-container">
             <div class="tree-column center-row">
                 <div id="log-tree"></div>
             </div>
@@ -45,6 +45,28 @@
                 </div>
             </div>
         </div>
+        <!-- BEGIN: overlay-form -->
+        <div id="overlay" style="display: none;" class="overlay">
+            <div id="form-container" class="centered popup-content">
+                <div class="column-container">
+                    <label for="parent-id">Parent ID:</label>
+                    <input type="number" id="parent-id" name="parent-id" min="1">
+
+                    <label for="edit-log-type-dropdown">Type:</label>
+                    <select id="edit-log-type-dropdown" name="edit-log-type-dropdown">
+                    </select>
+
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="comment" rows="4" cols="50"></textarea>
+
+                    <div id="button-container">
+                        <button id="submit-edit-button" type="submit-button">Submit</button>
+                        <button type="button" onclick="closeOverlay()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END: overlay-form -->
     </div>
     <script src="{{ url_for('static', filename='js_lib/server_interface.js') }}"></script>
     <script src="{{ url_for('static',  filename='js_lib/log_type_dropdown.js') }}"></script>
@@ -52,10 +74,11 @@
     <script src="{{ url_for('static', filename='js_lib/log_table.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/util.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/log_type_list.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/edit_log_overlay.js') }}"></script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script>
         window.addEventListener('load', function () {
-            refreshViewsV2();
+            refreshViews();
             populateLogTypeList();
         });
 
@@ -71,6 +94,9 @@
             event.preventDefault();
             submitLog();
         });
+
+        const submitEditButton = getSubmitButton();
+        submitEditButton.addEventListener('click', submitEdit);
     </script>
 </body>
 

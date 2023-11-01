@@ -11,10 +11,11 @@ async function refreshCurrentActivity() {
     populateCurrentActivity(activity);
 }
 
-async function refreshViewsV2() { 
-    const now = new Date();
+async function refreshViews() { 
     refreshCurrentActivity();
-    populateLogTypeDropdown();
+    const logTypeData = await getLogTypes();
+    populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
+    populateLogTypeDropdown(logTypeData, dropdown_id='edit-log-type-dropdown');
     const todayData = await getTodayData();
     populateTree(todayData);
     populateTable(todayData);

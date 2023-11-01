@@ -2,6 +2,7 @@
 
 from flask import jsonify, request, render_template, redirect
 
+from icecream import ic
 
 from app.comment_parser import parse_comment
 from app.db_funcs import (get_current_activity_comment, 
@@ -9,7 +10,9 @@ from app.db_funcs import (get_current_activity_comment,
                           add_log, 
                           get_logs_object,
                           get_activities_object,
-                          get_log_tree_object)
+                          get_log_tree_object,
+                          get_log_dict,
+                          edit_log as db_edit_log)
 from app.util import get_time_span
 from app import app, default_log_types
 
@@ -70,6 +73,22 @@ def get_log_tree():
 def get_logs_v2():
     return redirect('/get_logs')
 
+
+@app.route('/log/{log_id}', methods=['GET'])
+def get_log():
+    log = get_log_dict(request.args['log_id'])
+    return jsonify(log)
+
+
+@app.route('/edit_log', methods=['POST'])
+def edit_log():
+    data = request.get_json()
+    ic(data)
+    comment = parse_comment(data['comment'])
+    log_id = data['log_id']
+    default_log_type = data['log_type']
+    db_edit_log(log_id, comment, default_log_type)
+    return redirect('/')
 
 if __name__ == '__main__':
     app.run(debug=True)

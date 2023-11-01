@@ -47,6 +47,13 @@ def add_log(comment: Comment, log_type_default: str=None)  -> None:
         session.commit()
 
 
+def edit_log(log_id: int, comment: Comment, log_type_default: str=None) -> None:
+    with Session() as session:
+        log = get_log(session, log_id)
+        log.log_type = comment.log_type or log_type_default
+        log.comment = comment.comment
+        session.commit()
+
 #############################################################
 ## native object getters
 #############################################################
@@ -90,11 +97,20 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
         tree = [assemble_tree(session, orphan) for orphan in orphans]
     return tree
 
+
+def get_log_dict(log_id: int) -> dict:
+    with Session() as session:
+        log = get_log(session, log_id)
+        return {'id': log.id,
+                'timestamp': log.timestamp.strftime('%H:%M'),
+                'log_type': log.log_type,
+                'comment': log.comment,
+                'parent_id': log.parent_id}
+
 #############################################################
 ## models getters
 #############################################################
 # these all take a session as an argument, so they can be used in a session context
-
 
 def query_logs(session, time_span: TimeSpan=None) -> List[Log]:
     if time_span:
@@ -119,6 +135,10 @@ def get_current_activity(session) -> Activity|None:
 def get_children(session, log: Log) -> List[Log]:
     """returns a list of the children of the given log"""
     return session.query(Log).filter(Log.parent_id == log.id).all()
+
+
+def get_log(session, log_id: int) -> Log:
+    return session.query(Log).filter(Log.id == log_id).first()
 
 
 #############################################################

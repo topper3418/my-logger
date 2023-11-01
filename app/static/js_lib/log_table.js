@@ -11,6 +11,14 @@ function populateTable(todayData) {
     todayData.forEach(log => {
         const row = document.createElement('tr');
 
+        row.dataset.id = log.id;
+
+        // on double cliek, open the edit popup
+        row.addEventListener('dblclick', () => {
+            populateOverlayData(data=log);
+            showOverlay();
+        });
+
         timestamp_cell = document.createElement('td');
         timestamp_cell.innerHTML = log.timestamp;
         timestamp_cell.style.textAlign = 'right';
@@ -22,6 +30,8 @@ function populateTable(todayData) {
         comment_cell.innerHTML = log.comment;
         comment_cell.style.color = getColor(log);
         row.appendChild(comment_cell);
+
+        // add event listener to the 
 
         tableBody.appendChild(row);
     });
