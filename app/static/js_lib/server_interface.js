@@ -39,7 +39,7 @@ async function submitLog() {
     // clear the text box
     textBox.value = '';
     // refresh the table
-    refreshViewsV2();
+    refreshViews();
     return response;
 }
 
