@@ -68,10 +68,7 @@ def get_log_tree():
 
 @app.route('/get_logs_v2', methods=['GET'])
 def get_logs_v2():
-    time_span = get_time_span(request.args)
-
-    data = get_logs_object(time_span=time_span)
-    return jsonify(data)
+    return redirect('/get_logs')
 
 
 if __name__ == '__main__':

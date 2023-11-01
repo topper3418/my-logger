@@ -46,7 +46,13 @@
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/server_interface.js') }}"></script>
+    <script src="{{ url_for('static',  filename='js_lib/log_type_dropdown.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/log_tree.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/log_table.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/util.js') }}"></script>
+    <script src="{{ url_for('static', filename='js_lib/log_type_list.js') }}"></script>
+    <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script>
         window.addEventListener('load', function () {
             refreshViewsV2();

@@ -150,10 +150,10 @@ def has_children(session, log: Log) -> bool:
 def assemble_tree(session, log: Log) -> dict:
     """returns a dictionary representing the given log and its children"""
     children = get_children(session, log)
-    has_complete = any(child.log_type.log_type == 'complete' for child in children)
+    has_complete = any(child.log_type == 'complete' for child in children)
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
-                'log_type': log.log_type.log_type if log.log_type else None,
+                'log_type': log.log_type if log.log_type else None,
                 'comment': log.comment,
                 'parent_id': log.parent_id if log.parent_id else None,
                 'complete': has_complete,
