@@ -47,11 +47,12 @@ def add_log(comment: Comment, log_type_default: str=None)  -> None:
         session.commit()
 
 
-def edit_log(log_id: int, comment: Comment, log_type_default: str=None) -> None:
+def edit_log(log_id: int, comment: Comment, log_type_default: str=None, parent_id: int=None) -> None:
     with Session() as session:
         log = get_log(session, log_id)
         log.log_type = comment.log_type or log_type_default
         log.comment = comment.comment
+        log.parent_id = parent_id
         session.commit()
 
 #############################################################

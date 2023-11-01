@@ -87,7 +87,8 @@ def edit_log():
     comment = parse_comment(data['comment'])
     log_id = data['log_id']
     default_log_type = data['log_type']
-    db_edit_log(log_id, comment, default_log_type)
+    parent_id = data['parent_id']
+    db_edit_log(log_id, comment, default_log_type, parent_id)
     return redirect('/')
 
 if __name__ == '__main__':
