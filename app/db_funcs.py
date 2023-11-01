@@ -3,8 +3,7 @@
 # and returning other data structures from the database
 
 from app import Session
-from app.models import (LogType, 
-                        Log, 
+from app.models import (Log, 
                         Activity, 
                         Comment, 
                         TimeSpan)
@@ -28,7 +27,7 @@ def set_activity(log_id: int) -> None:
 
 def add_log(comment: Comment, log_type_default: str=None)  -> None:
     # use comment log type id if it exists, otherwise use the default
-    log_type_id = int(comment.log_type_id or log_type_default)
+    log_type = comment.log_type or log_type_default
     with Session() as session:
         # get the current activity from db
         current_activity = get_current_activity(session)
@@ -41,24 +40,10 @@ def add_log(comment: Comment, log_type_default: str=None)  -> None:
             parent_id = comment.parent_id  # this will be None if the user does not specify, which is what we want. 
         # add to database
         log = Log(timestamp=datetime.now(),
-                  log_type_id=log_type_id, 
+                  log_type=log_type, 
                   comment=comment.comment, 
                   parent_id=parent_id)
         session.add(log)
-        session.commit()
-
-
-def add_log_type(log_type: str, color: str) -> None:
-    with Session() as session:
-        log_type = LogType(log_type=log_type, color=color)
-        session.add(log_type)
-        session.commit()
-
-
-def delete_log_type(log_type_id: int) -> None:
-    with Session() as session:
-        log_type = session.query(LogType).filter(LogType.id == log_type_id).first()
-        session.delete(log_type)
         session.commit()
 
 
@@ -66,32 +51,44 @@ def delete_log_type(log_type_id: int) -> None:
 ## native object getters
 #############################################################
 
-def get_log_types(as_dict: bool=False) -> list[str]:
-    """returns a list of all LogType objects"""
-    with Session() as session:
-        result = session.query(LogType).all()
-    if as_dict:
-        return [{'id': log_type.id, 
-                 'log_type': log_type.log_type, 
-                 'color': log_type.color} 
-                 for log_type in result]
-    return [log_type.log_type for log_type in result]
-
-
-def get_log_type_id(log_type: str) -> int|None:
-    """returns the LogType object with the given log_type, or None if it doesn't exist"""
-    with Session() as session:
-        log_type = session.query(LogType).filter(LogType.log_type == log_type).first()
-    if log_type:
-        return log_type.id
-
-
 def get_current_activity_comment() -> str|None:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
         if current_activity:
             return current_activity.active_log.comment
 
+
+def get_logs_object(time_span: TimeSpan=None) -> List[dict]:
+    with Session() as session:
+        logs = query_logs(session, time_span=time_span)
+        data = [{'id': log.id,
+                 'timestamp': log.timestamp.strftime('%H:%M'),
+                 'log_type': log.log_type,
+                 'time_spent': get_log_active_time(session, log),
+                 'comment': log.comment,
+                 'complete': any(child.log_type == 'complete' for child in get_children(session, log)),
+                 'parent_id': log.parent_id} for log in logs]
+        return data
+
+
+def get_activities_object(time_span: TimeSpan=None) -> List[dict]:
+    with Session() as session:
+        activities = query_activities(session, time_span=time_span)
+        data = [{'id': activity.id, 
+                 'timestamp': activity.timestamp.strftime('%H:%M'), 
+                 'duration': get_activity_duration(session, activity),
+                 'active_log_id': activity.active_log_id} 
+                 for activity in activities]
+        return data
+
+
+def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
+    with Session() as session:
+        logs = query_logs(session, time_span=time_span)
+        log_ids = [log.id for log in logs]
+        orphans = [log for log in logs if log.parent_id not in log_ids]
+        tree = [assemble_tree(session, orphan) for orphan in orphans]
+    return tree
 
 #############################################################
 ## models getters

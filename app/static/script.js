@@ -74,11 +74,11 @@ async function submitLog() {
     const dropdown = document.getElementById('log-type-dropdown');
     // get the value of the text box and dropdown
     const comment = textBox.value;
-    const logTypeId = dropdown.value;
+    const logType = dropdown.value;
     // send the value of the text box and dropdown to the server
     const response = await fetch(`/submit`, {
         method: 'POST',
-        body: JSON.stringify({ 'log-comment': comment, 'log-type-id': logTypeId }),
+        body: JSON.stringify({ 'log-comment': comment, 'log-type': logType }),
         headers: {
             'Content-Type': 'application/json'
         }
@@ -199,7 +199,6 @@ async function populateLogTypeList() {
     types.forEach(type => {
         const item = document.createElement('li');
         item.innerHTML = type.log_type;
-        item.dataset.type_id = type.id;
         item.style.color = type.color; // set the color of the list item
         item.addEventListener('click', highlightItem);
         list.appendChild(item);
@@ -213,7 +212,7 @@ async function populateLogTypeDropdown() {
     dropdown.dataset.log_types = JSON.stringify(types);
     types.forEach(type => {
         const option = document.createElement('option');
-        option.value = type.id;
+        option.value = type.log_type;
         option.innerHTML = type.log_type;
         dropdown.appendChild(option);
     });

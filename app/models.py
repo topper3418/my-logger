@@ -1,21 +1,14 @@
-from app import db
+from app import db, app
 
 from dataclasses import dataclass
 from datetime import datetime
 
-class LogType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    log_type = db.Column(db.String(50))
-    color = db.Column(db.String(50))
-
-    def __repr__(self):
-        return f'<LogTypes {self.id} - {self.log_type}>'
     
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime)
-    log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'))
-    log_type = db.relationship('LogType', backref='logs', lazy=True)
+    #log_type_id = db.Column(db.Integer, db.ForeignKey('log_type.id'))
+    log_type = db.Column(db.String(55))  # db.relationship('LogType', backref='logs', lazy=True)
     comment = db.Column(db.String(255))
     parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
     parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
@@ -33,10 +26,13 @@ class Activity(db.Model):
         return f'<Activity {self.timestamp}, {self.active_log_id}>'
 
 
+with app.app_context():
+    db.create_all()
+
 @dataclass
 class Comment:
     comment: str
-    log_type_id: int = None
+    log_type: str = None
     parent_id: int = None
     state_command: bool = False
 
