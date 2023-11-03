@@ -7,17 +7,25 @@ function getOverlayData() {
     return { comment, log_type, parent_id, log_id };
 }
 
-// Function to populate the overlay with data
-function populateOverlayData(data={}) {
-    document.querySelector('#parent-id').value = data.parent_id;
-    document.querySelector('#edit-log-type-dropdown').value = data.log_type;
-    document.querySelector('#comment').value = data.comment;
-    getOverlayElement().dataset.log_id = data.id;
+async function renderOverlay(logId) {
+    // get the log data
+    const overlay_html = await fetch(`/edit_log/${logId}`).then(response => response.text());
+    // set the overlay html
+    getOverlayElement().innerHTML = overlay_html;
+    // show the overlay
+    console.log(getOverlayElement());
+    showOverlay();
 }
 
 // Function to hide the overlay
 function hideOverlay() {
     getOverlayElement().style.display = 'none';
+}
+
+// Function to Remove the overlay
+function removeOverlay() {
+    getOverlayElement().innerHTML = '';
+    hideOverlay();
 }
 
 // Function to show the overlay
@@ -40,7 +48,8 @@ function getSubmitButton() {
 async function submitEdit() {
     const data = getOverlayData();
     console.log(data);
-    await fetch(`/edit_log`, {
+    log_id = data.log_id;
+    await fetch(`/edit_log/${log_id}`, {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {

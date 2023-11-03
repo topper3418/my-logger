@@ -15,7 +15,6 @@ async function refreshViews() {
     refreshCurrentActivity();
     const logTypeData = await getLogTypes();
     populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
-    populateLogTypeDropdown(logTypeData, dropdown_id='edit-log-type-dropdown');
     const todayData = await getTodayData();
     populateTree(todayData);
     populateTable(todayData);

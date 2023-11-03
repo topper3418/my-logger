@@ -74,22 +74,31 @@ def get_logs_v2():
     return redirect('/get_logs')
 
 
-@app.route('/log/{log_id}', methods=['GET'])
-def get_log():
-    log = get_log_dict(request.args['log_id'])
+@app.route('/log/<log_id>', methods=['GET'])
+def get_log(log_id):
+    log = get_log_dict(log_id)
     return jsonify(log)
 
 
-@app.route('/edit_log', methods=['POST'])
-def edit_log():
-    data = request.get_json()
-    ic(data)
-    comment = parse_comment(data['comment'])
-    log_id = data['log_id']
-    default_log_type = data['log_type']
-    parent_id = data['parent_id']
-    db_edit_log(log_id, comment, default_log_type, parent_id)
-    return redirect('/')
+@app.route('/edit_log/<log_id>', methods=['POST', 'GET'])
+def edit_log(log_id):
+    # if GET, return the edit log popup
+    if request.method == 'GET':
+        log = get_log_dict(log_id)
+        log['log_types'] = [l_type['log_type'] for l_type in default_log_types]
+        return render_template('popups/edit_log.html', **log)
+    # if POST, edit the log and return success or failure
+    data = request.get_json(log_id)
+    try:
+        comment = parse_comment(data['comment'])
+        log_id = data['log_id']
+        default_log_type = data['log_type']
+        parent_id = data['parent_id']
+        db_edit_log(log_id, comment, default_log_type, parent_id)
+        return jsonify('success')
+    except Exception as e:
+        ic(e)
+        return jsonify(str(e))
 
 if __name__ == '__main__':
     app.run(debug=True)

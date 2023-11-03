@@ -15,8 +15,7 @@ function populateTable(todayData) {
 
         // on double cliek, open the edit popup
         row.addEventListener('dblclick', () => {
-            populateOverlayData(data=log);
-            showOverlay();
+            renderOverlay(logId=log.id);
         });
 
         timestamp_cell = document.createElement('td');

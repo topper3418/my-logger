@@ -1,0 +1,30 @@
+<div id="form-container" class="centered popup-content">
+    <div class="column-container">
+        <label for="parent-id">Parent ID:</label>
+        <input type="number" id="parent-id" name="parent-id" min="1" value="{{ parent_id }}">
+
+        <label for="edit-log-type-dropdown">Type:</label>
+        <select id="edit-log-type-dropdown" name="edit-log-type-dropdown">
+            {% for l_type in log_types %}
+                {% if l_type == log_type %}
+                    <option value="{{ l_type }}" selected>{{ l_type }}</option>
+                {% else %}
+                    <option value="{{ l_type }}">{{ l_type }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <label for="comment">Comment:</label>
+        <textarea id="comment" name="comment" rows="4" cols="50">{{ comment }}</textarea>
+
+        <div id="button-container">
+            <button id="submit-edit-button" onclick="submitEdit()">Submit</button>
+            <button type="button" onclick="removeOverlay()">Cancel</button>
+        </div>
+    </div>
+</div>
+<script>
+    const submitEditButton = getSubmitButton();
+    submitEditButton.addEventListener('click', submitEdit);
+    populateLogTypeDropdown(logTypeData, dropdown_id='edit-log-type-dropdown');
+</script>
