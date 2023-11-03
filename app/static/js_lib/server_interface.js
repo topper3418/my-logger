@@ -73,6 +73,22 @@ async function getTodayData() {
     return await response.json();
 }
 
+async function getDataForDate(date) {
+    console.log(date);
+    // const startOfDay = new Date(date);
+    // set the start time to midnight
+    // startOfDay.setHours(0, 0, 0, 0);
+    // const start_time = startOfDay.getTime();
+    // const end_time = start_time + 86400000;
+    const response = await fetch(`/get_logs?target_date=${date}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    return await response.json();
+}
+
 
 async function getLog(log_id) {
     const response = await fetch(`/log/${log_id}`);

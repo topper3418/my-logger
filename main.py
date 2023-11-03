@@ -2,6 +2,8 @@
 
 from flask import jsonify, request, render_template, redirect
 
+from datetime import datetime
+
 from icecream import ic
 
 from app.comment_parser import parse_comment
@@ -20,7 +22,8 @@ from app import app, default_log_types
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    date = datetime.now().strftime('%Y-%m-%d')
+    return render_template('index.html', date=date)
 
 
 @app.route('/submit', methods=['POST'])
@@ -38,7 +41,7 @@ def submit():
 @app.route('/get_logs', methods=['GET'])
 def get_logs():
     time_span = get_time_span(request.args)
-
+    ic(time_span)
     data = get_logs_object(time_span=time_span)
     return jsonify(data)
 
@@ -86,6 +89,7 @@ def edit_log(log_id):
     if request.method == 'GET':
         log = get_log_dict(log_id)
         log['log_types'] = [l_type['log_type'] for l_type in default_log_types]
+        log['log_id'] = log_id
         return render_template('popups/edit_log.html', **log)
     # if POST, edit the log and return success or failure
     data = request.get_json(log_id)

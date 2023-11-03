@@ -1,9 +1,9 @@
 // Function to return the data from the overlay
 function getOverlayData() {
-    const parent_id = document.querySelector('#parent-id').value;
+    const parent_id = document.querySelector('#edit-parent-id').value;
     const log_type = document.querySelector('#edit-log-type-dropdown').value;
-    const comment = document.querySelector('#comment').value;
-    const log_id = getOverlayElement().dataset.log_id;
+    const comment = document.querySelector('#edit-comment').value;
+    const log_id = document.querySelector('#edit-log-id').value;
     return { comment, log_type, parent_id, log_id };
 }
 
@@ -13,7 +13,6 @@ async function renderOverlay(logId) {
     // set the overlay html
     getOverlayElement().innerHTML = overlay_html;
     // show the overlay
-    console.log(getOverlayElement());
     showOverlay();
 }
 
