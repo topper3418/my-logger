@@ -64,7 +64,12 @@ async function getTodayData() {
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const start_time = startOfDay.getTime();
     const end_time = now.getTime();
-    const response = await fetch(`/get_logs_v2?start_time=${start_time}&end_time=${end_time}`);
+    const response = await fetch(`/get_logs?start_time=${start_time}&end_time=${end_time}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
     return await response.json();
 }
 
