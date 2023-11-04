@@ -69,7 +69,8 @@ def get_state_history():
 def get_log_tree():
     time_span = get_time_span(request.args)
     tree = get_log_tree_object(time_span=time_span)
-    return render_template('components/tree_view.html', log_tree=tree)
+    tree_element = render_template('components/tree_view.html', log_tree=tree)
+    return render_template('test.html', element=tree_element)
 
 
 # @app.route('/get_logs_v2', methods=['GET'])
@@ -104,10 +105,6 @@ def edit_log(log_id):
         ic(e)
         return jsonify(str(e))
 
-
-@app.route('/test_route', methods=['GET'])
-def test_route():  
-    return render_template('test.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
