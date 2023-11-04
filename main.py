@@ -69,12 +69,12 @@ def get_state_history():
 def get_log_tree():
     time_span = get_time_span(request.args)
     tree = get_log_tree_object(time_span=time_span)
-    return jsonify(tree)
+    return render_template('components/tree_view.html', log_tree=tree)
 
 
-@app.route('/get_logs_v2', methods=['GET'])
-def get_logs_v2():
-    return redirect('/get_logs')
+# @app.route('/get_logs_v2', methods=['GET'])
+# def get_logs_v2():
+#     return redirect('/get_logs')
 
 
 @app.route('/log/<log_id>', methods=['GET'])
@@ -103,6 +103,11 @@ def edit_log(log_id):
     except Exception as e:
         ic(e)
         return jsonify(str(e))
+
+
+@app.route('/test_route', methods=['GET'])
+def test_route():  
+    return render_template('test.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

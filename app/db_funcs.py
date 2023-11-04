@@ -2,11 +2,13 @@
 # this includes returning objects from the models database, adding to the database
 # and returning other data structures from the database
 
-from app import Session
+from app import Session, default_log_types, get_color
+
 from app.models import (Log, 
                         Activity, 
                         Comment, 
                         TimeSpan)
+from app.util import get_duration_string
 
 from icecream import ic
 from datetime import datetime
@@ -25,7 +27,7 @@ def set_activity(log_id: int) -> None:
         session.commit()
 
 
-def add_log(comment: Comment, log_type_default: str=None)  -> None:
+def add_log(comment: Comment, log_type_default: str=None) -> None:
     # use comment log type id if it exists, otherwise use the default
     log_type = comment.log_type or log_type_default
     with Session() as session:
@@ -172,11 +174,21 @@ def assemble_tree(session, log: Log) -> dict:
     """returns a dictionary representing the given log and its children"""
     children = get_children(session, log)
     has_complete = any(child.log_type == 'complete' for child in children)
+    children = [assemble_tree(session, child) for child in children]
+    direct_duration = get_log_active_time(session, log)
+    if children:
+        total_duration = sum([child['total_duration'] for child in children]) + direct_duration
+    else:
+        total_duration = direct_duration
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
                 'log_type': log.log_type if log.log_type else None,
+                'type_color': get_color(log.log_type) if log.log_type else None,
                 'comment': log.comment,
                 'parent_id': log.parent_id if log.parent_id else None,
                 'complete': has_complete,
-                'children': [assemble_tree(session, child) for child in children]}
+                'direct_duration': direct_duration,
+                'total_duration': total_duration,
+                'duration_string': get_duration_string(total_duration),
+                'children': children}
     return dict_out

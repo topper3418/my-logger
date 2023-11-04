@@ -17,6 +17,12 @@ default_log_types = [
     {'log_type': 'distraction', 'color': 'purple'}
 ]
 
+def get_color(log_type: str) -> str:
+    for log_type_dict in default_log_types:
+        if log_type_dict['log_type'] == log_type:
+            return log_type_dict['color']
+    return 'black'
+
 
 with app.app_context():
     Session = sessionmaker(bind=db.engine)

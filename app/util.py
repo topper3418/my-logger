@@ -16,3 +16,12 @@ def get_time_span(request_args: dict) -> TimeSpan|None:
         start_time = datetime.combine(target_date, datetime.min.time())
         end_time = datetime.combine(target_date, datetime.max.time())
         return TimeSpan(start_time, end_time)
+
+
+def get_duration_string(time_span: TimeSpan | int) -> str:
+    if isinstance(time_span, TimeSpan):
+        duration = time_span.duration
+    else:
+        duration = time_span
+        
+    return f'{duration // 3600}:{(duration % 3600) // 60}'

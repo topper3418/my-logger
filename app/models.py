@@ -41,3 +41,11 @@ class Comment:
 class TimeSpan:
     start: datetime
     end: datetime
+
+    @property
+    def duration(self):
+        if self.start and self.end:
+            return int((self.end - self.start).total_seconds())
+        else:
+            return None
+    
