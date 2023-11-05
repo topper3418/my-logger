@@ -9,8 +9,9 @@ async function populateLogTypeDropdown(log_type_data, dropdown_id='log-type-drop
     dropdown.dataset.log_types = JSON.stringify(log_type_data);
     log_type_data.forEach(type => {
         const option = document.createElement('option');
-        option.value = type.log_type;
-        option.innerHTML = type.log_type;
+        option.value = type;
+        option.innerHTML = type;
+        option.classList.add(`task-type-${type}`);
         dropdown.appendChild(option);
     });
 }

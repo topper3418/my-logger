@@ -2,7 +2,7 @@
 # this includes returning objects from the models database, adding to the database
 # and returning other data structures from the database
 
-from app import Session, default_log_types, get_color
+from app import Session, default_log_types#, get_color
 
 from app.models import (Log, 
                         Activity, 
@@ -183,12 +183,11 @@ def assemble_tree(session, log: Log) -> dict:
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
                 'log_type': log.log_type if log.log_type else None,
-                'type_color': get_color(log.log_type) if log.log_type else None,
                 'comment': log.comment,
                 'parent_id': log.parent_id if log.parent_id else None,
                 'complete': has_complete,
                 'direct_duration': direct_duration,
                 'total_duration': total_duration,
-                'duration_string': get_duration_string(total_duration),
+                'duration_string': get_duration_string(direct_duration),
                 'children': children}
     return dict_out

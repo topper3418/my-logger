@@ -15,16 +15,13 @@
         <h2 id="current_activity"></h2>
         <div class="row-container">
             <div class="tree-column center-row">
-                <div id="log-tree"></div>
+                <div id="log-tree">
+                    {{ log_tree|safe }}
+                </div>
             </div>
             <div class="table-column center-row">
-                <div class="push-right">
-                    <table id="log-table">
-                        <thead>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
+                <div id="log-table" class="push-right">
+                    {{ log_table|safe }}
                 </div>
             </div>
         </div>
@@ -50,7 +47,6 @@
     <div id="overlay" style="display: none;" class="overlay"></div>    
     <script src="{{ url_for('static', filename='js_lib/server_interface.js') }}"></script>
     <script src="{{ url_for('static',  filename='js_lib/log_type_dropdown.js') }}"></script>
-    <script src="{{ url_for('static', filename='js_lib/log_tree.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/log_table.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/util.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/log_type_list.js') }}"></script>
@@ -60,8 +56,10 @@
         
         const logTypeData = getLogTypes();
 
-        window.addEventListener('load', function () {
-            refreshViews();
+        window.addEventListener('load', async function () {
+            
+            const logTypeData = await getLogTypes();
+            populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
             populateLogTypeList();
         });
 

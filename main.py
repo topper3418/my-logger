@@ -18,12 +18,19 @@ from app.db_funcs import (get_current_activity_comment,
 from app.util import get_time_span
 from app import app, default_log_types
 
-
+# enable/disable ic here
+#ic.disable()
 
 @app.route('/')
 def index():
     date = datetime.now().strftime('%Y-%m-%d')
-    return render_template('index.html', date=date)
+    time_span = get_time_span({'target_date': date})
+
+    tree_data = get_log_tree_object(time_span)
+    table_data = get_logs_object(time_span)
+    log_tree = render_template('components/tree_view.html', log_tree=tree_data)
+    log_table = render_template('components/table_view.html', log_table=table_data)
+    return render_template('index.html', date=date, log_tree=log_tree, log_table=log_table)
 
 
 @app.route('/submit', methods=['POST'])
@@ -41,7 +48,6 @@ def submit():
 @app.route('/get_logs', methods=['GET'])
 def get_logs():
     time_span = get_time_span(request.args)
-    ic(time_span)
     data = get_logs_object(time_span=time_span)
     return jsonify(data)
 
@@ -65,13 +71,17 @@ def get_state_history():
     return jsonify(data)
 
 
-@app.route('/get_log_tree', methods=['GET'])
+@app.route('/log_tree', methods=['GET'])
 def get_log_tree():
     time_span = get_time_span(request.args)
     tree = get_log_tree_object(time_span=time_span)
-    tree_element = render_template('components/tree_view.html', log_tree=tree)
-    return render_template('test.html', element=tree_element)
+    return render_template('components/tree_view.html', log_tree=tree)
 
+@app.route('/log_table', methods=['GET'])
+def get_log_table():
+    time_span = get_time_span(request.args)
+    logs = get_logs_object(time_span=time_span)
+    return render_template('components/table_view.html', log_table=logs)
 
 # @app.route('/get_logs_v2', methods=['GET'])
 # def get_logs_v2():
@@ -89,7 +99,7 @@ def edit_log(log_id):
     # if GET, return the edit log popup
     if request.method == 'GET':
         log = get_log_dict(log_id)
-        log['log_types'] = [l_type['log_type'] for l_type in default_log_types]
+        log['log_types'] = default_log_types
         log['log_id'] = log_id
         return render_template('popups/edit_log.html', **log)
     # if POST, edit the log and return success or failure

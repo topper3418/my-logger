@@ -3,7 +3,7 @@ function getTableBody() {
 }
 
 
-function populateTable(todayData) {
+function populateTableOld(todayData) {
     const tableBody = getTableBody();
     tableBody.innerHTML = '';
     // reverse the order of logs
@@ -27,11 +27,17 @@ function populateTable(todayData) {
 
         comment_cell = document.createElement('td');
         comment_cell.innerHTML = log.comment;
-        comment_cell.style.color = getColor(log);
+        comment_cell.classList.add(`task-type-${log.task_type}`);
         row.appendChild(comment_cell);
 
         // add event listener to the 
 
         tableBody.appendChild(row);
     });
+}
+
+
+function populateTable(table_html) {
+    const tableDiv = document.getElementById('log-table');
+    tableDiv.innerHTML = table_html;
 }

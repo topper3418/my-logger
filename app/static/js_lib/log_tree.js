@@ -114,13 +114,19 @@ function make_into_tree(todayData) {
 }
 
 
-function populateTree(todayData) {
-    const treeDiv = document.getElementById('log-tree');
+function get_collapsed_ids() {
     const collapsed = document.querySelectorAll('.children.hidden');
     const collapsedIds = [];
     collapsed.forEach(element => {
         collapsedIds.push(element.parentElement.querySelector('.log-element').dataset.log_id);
     });
+    return collapsedIds;
+}
+
+
+function populateTreeOld(todayData) {
+    const treeDiv = document.getElementById('log-tree');
+    const collapsed_ids = get_collapsed_ids();
     treeDiv.innerHTML = '';
     treeDiv.dataset.collapsed = collapsedIds;
     console.log(collapsedIds)
@@ -128,6 +134,13 @@ function populateTree(todayData) {
     treeData.forEach(log => {
         treeDiv.appendChild(makeLogTreeElement(log));
     });
+}
+
+function populateTree(tree_html) {
+    const treeDiv = document.getElementById('log-tree');
+    treeDiv.innerHTML = '';
+    treeDiv.dataset.collapsed = get_collapsed_ids();
+    treeDiv.innerHTML = tree_html;
 }
 
 

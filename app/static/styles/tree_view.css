@@ -1,0 +1,33 @@
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.logIdLabel {
+    cursor: pointer; 
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.logIdLabel:hover {
+    text-decoration: underline;
+}
+
+.logComment {
+    margin: 0px 0px 0px 0px;
+    flex-grow: 1;
+}
+
+.log-element {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.log-element-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+}

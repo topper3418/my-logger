@@ -180,12 +180,6 @@ body {
   border-left: 3px solid black;
 }
 
-.log-element {
-  text-align: left;
-  margin: 0;
-  padding: 0;
-}
-
 .highlighted {
   color: rgb(0, 255, 76);
 }
@@ -235,4 +229,24 @@ body {
 .popup-content {
   background-color: #f2f2f2;
   padding: 20px;
+}
+
+.task-type-thought {
+  color: lightblue;
+}
+
+.task-type-task {
+  color: orange;
+}
+
+.task-type-error {
+  color: red;
+}
+
+.task-type-complete {
+  color: green;
+}
+
+.task-type-distraction {
+  color: purple;
 }

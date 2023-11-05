@@ -3,6 +3,8 @@ from app import default_log_types
 
 from typing import Tuple, List
 
+from icecream import ic
+
 def strip_submission(submission: str) -> Tuple[List[str], str]:
     """takes in a comment, and returns a list of commands, and the stripped comment"""
     commands = []
@@ -19,7 +21,7 @@ def get_command_type(command: str) -> str:
     """takes in a command, and returns the type of command it is"""
     if command.isnumeric() or not command:
         return 'parent_id'
-    if command in [log_type['log_type'] for log_type in default_log_types]:
+    if command in default_log_types:
         return 'log_type'
     
     
@@ -62,4 +64,5 @@ def parse_comment(comment: str) -> Comment:
     # state command is for submissions that are only parent id's
     state_command = parent_id and not comment and not log_type
 
-    return Comment(comment, log_type, parent_id, state_command)
+    comment = Comment(comment, log_type, parent_id, state_command)
+    return comment

@@ -16,7 +16,8 @@ async function refreshViews() {
     const logTypeData = await getLogTypes();
     populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
     const target_date = document.getElementById('target-date').value;
-    const LogData = await getDataForDate(target_date);
-    populateTree(LogData);
-    populateTable(LogData);
+    const tree_html = await getTreeHtml(target_date);
+    const table_html = await getTableHtml(target_date);
+    populateTree(tree_html);
+    populateTable(table_html);
 }

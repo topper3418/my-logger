@@ -1,0 +1,15 @@
+
+<table id="log-table">
+    <tbody>
+        {% for row in log_table %}
+            <tr data-id="{{ row.id }}" class="task-type-{{ row.log_type }}" ondblclick="renderOverlay(logId={{ row.id }})">
+                <td>
+                    {{ row.timestamp }}
+                </td>
+                <td>
+                    {{ row.comment }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>    
+</table>
