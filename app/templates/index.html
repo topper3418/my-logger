@@ -9,39 +9,43 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
 <body>
-    <div class="wrapper">
-        <h1>My Logger</h1>
-        <input type="date" id="target-date" name="date-input" value="{{ date }}" onchange="refreshViews()">
-        <div id="current_activity">
-            <h2>Current Activity: <br><t>{{ current_activity }}</t></h2>
+    <div class="column-conatiner wrapper">
+        <div class="column-container" id="main-title-banner">
+            <h1>My Logger</h1>
+            <input type="date" id="target-date" name="date-input" value="{{ date }}" onchange="refreshViews()">
         </div>
-        <div class="row-container">
-            <div class="tree-column center-row">
+        <div class="row-container" id="main-content">
+            <div class="tree-column">
                 <div id="log-tree">
                     {{ log_tree|safe }}
                 </div>
             </div>
-            <div class="table-column center-row">
-                <div id="log-table" class="push-right">
-                    {{ log_table|safe }}
+            <div class="column-container">
+                <div id="current_activity">
+                    <h2>Current Activity: <br><t>{{ current_activity }}</t></h2>
                 </div>
-            </div>
-        </div>
-        <div class="input-container">
-            <div id="type_legend" class="push-left">
-                {{ type_legend|safe }}
-            </div>
-            <div class="row-cluster">
-                <div class="column-container">
-                    <div class="row-container">
-                        <div id="type-dropdown-container" class="row-cluster">
-                            {{ type_dropdown|safe }}
+                <div class="row-container">
+                    <div id="type_legend" class="push-left">
+                        {{ type_legend|safe }}
+                    </div>
+                    <div class="row-cluster">
+                        <div class="column-container">
+                            <div class="row-container">
+                                <div id="type-dropdown-container" class="row-cluster">
+                                    {{ type_dropdown|safe }}
+                                </div>
+                            </div>
+                            <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
+                        </div>
+                        <div class="push-bottom">
+                            <button class="submit-button" id="submit">Add Log</button>
                         </div>
                     </div>
-                    <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
                 </div>
-                <div class="push-bottom">
-                    <button class="submit-button" id="submit">Add Log</button>
+            </div>
+            <div class="table-column">
+                <div id="log-table" class="push-right">
+                    {{ log_table|safe }}
                 </div>
             </div>
         </div>
