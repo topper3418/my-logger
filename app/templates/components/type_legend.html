@@ -1,0 +1,10 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/type_legend.css') }}">
+<div class="column-container legend-container">
+    {% for log_type in log_types %}
+        <div class="row-cluster">
+            <div class="log-type-legend {{ 'task-type-' + log_type }}">
+                <p>{{ log_type }}</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>

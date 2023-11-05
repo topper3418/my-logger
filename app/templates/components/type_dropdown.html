@@ -1,0 +1,12 @@
+<select id="{{ dropdown_id }}" name="log-type" class= "task-type-{{ default_log_type }}" onchange="setColor(event)">
+    {% for log_type in log_types %}
+        {% if log_type == default_log_type %}
+            <option value="{{ log_type }}" class="task-type-{{ log_type }}" selected>
+        {% else %}
+            <option value="{{ log_type }}" class="task-type-{{ log_type }}">
+        {% endif %}
+            {{ log_type }}
+        </option>
+    {% endfor %}
+</select>
+<script src="{{ url_for('static', filename='js_lib/log_type_dropdown.js') }}"></script>

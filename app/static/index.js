@@ -13,11 +13,31 @@ async function refreshCurrentActivity() {
 
 async function refreshViews() { 
     refreshCurrentActivity();
-    const logTypeData = await getLogTypes();
-    populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
     const target_date = document.getElementById('target-date').value;
     const tree_html = await getTreeHtml(target_date);
     const table_html = await getTableHtml(target_date);
     populateTree(tree_html);
     populateTable(table_html);
+}
+
+
+// Function to hide the overlay
+function hideOverlay() {
+    getOverlayElement().style.display = 'none';
+}
+
+// Function to Remove the overlay
+function removeOverlay() {
+    getOverlayElement().innerHTML = '';
+    hideOverlay();
+}
+
+// Function to show the overlay
+function showOverlay() {
+    getOverlayElement().style.display = 'block';
+}
+
+// Function to return the overlay element
+function getOverlayElement() {
+    return document.getElementById('overlay');
 }

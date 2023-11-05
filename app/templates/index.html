@@ -12,7 +12,9 @@
     <div class="wrapper">
         <h1>My Logger</h1>
         <input type="date" id="target-date" name="date-input" value="{{ date }}" onchange="refreshViews()">
-        <h2 id="current_activity"></h2>
+        <div id="current_activity">
+            <h2>Current Activity: <br><t>{{ current_activity }}</t></h2>
+        </div>
         <div class="row-container">
             <div class="tree-column center-row">
                 <div id="log-tree">
@@ -26,30 +28,27 @@
             </div>
         </div>
         <div class="input-container">
-            <div class="push-left">
-                <ul id="log-types-list"></ul>
+            <div id="type_legend" class="push-left">
+                {{ type_legend|safe }}
             </div>
             <div class="row-cluster">
                 <div class="column-container">
                     <div class="row-container">
-                        <div class="row-cluster">
-                            <select id="log-type-dropdown" name="log-type"></select>
+                        <div id="type-dropdown-container" class="row-cluster">
+                            {{ type_dropdown|safe }}
                         </div>
                     </div>
                     <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
                 </div>
                 <div class="push-bottom">
-                    <button id="submit">Add Log</button>
+                    <button class="submit-button" id="submit">Add Log</button>
                 </div>
             </div>
         </div>
     </div>
     <div id="overlay" style="display: none;" class="overlay"></div>    
     <script src="{{ url_for('static', filename='js_lib/server_interface.js') }}"></script>
-    <script src="{{ url_for('static',  filename='js_lib/log_type_dropdown.js') }}"></script>
-    <script src="{{ url_for('static', filename='js_lib/log_table.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/util.js') }}"></script>
-    <script src="{{ url_for('static', filename='js_lib/log_type_list.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/edit_log_overlay.js') }}"></script>
     <script src="{{ url_for('static', filename='index.js') }}"></script>
     <script>
@@ -58,9 +57,6 @@
 
         window.addEventListener('load', async function () {
             refreshCurrentActivity();
-            const logTypeData = await getLogTypes();
-            populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
-            populateLogTypeList();
         });
 
         const textarea = document.getElementById('log-comment');
