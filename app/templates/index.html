@@ -57,7 +57,7 @@
         const logTypeData = getLogTypes();
 
         window.addEventListener('load', async function () {
-            
+            refreshCurrentActivity();
             const logTypeData = await getLogTypes();
             populateLogTypeDropdown(logTypeData, dropdown_id='log-type-dropdown');
             populateLogTypeList();

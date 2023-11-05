@@ -23,20 +23,27 @@ function get_collapsed_ids() {
     const collapsed = document.querySelectorAll('.children.hidden');
     const collapsedIds = [];
     collapsed.forEach(element => {
-        collapsedIds.push(element.parentElement.querySelector('.log-element').dataset.log_id);
+        collapsedIds.push(element.parentElement.dataset.log_id);
     });
     return collapsedIds;
 }
 
 
 function populateTree(tree_html) {
+    // this is where the tree will go
     const treeDiv = document.getElementById('log-tree');
+    // non-rendered element to do our work on beforehand
+    const tree = document.createElement('div');
     const collapsed_ids = get_collapsed_ids();
     console.log(collapsed_ids);
-    treeDiv.innerHTML = tree_html;
+    //treeDiv.innerHTML = tree_html;
+    // turn the html string into an element
+    tree.innerHTML = tree_html;
     collapsed_ids.forEach(id => {
-        const element = document.querySelector(`.log-element-container[data-log_id="${id}"]`);
+        const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
         console.log(element);
         collapseChildrenHelper(element);
     });
+
+    treeDiv.innerHTML = tree.innerHTML;
 }

@@ -68,7 +68,7 @@ def get_current_activity_comment() -> str|None:
             return current_activity.active_log.comment
 
 
-def get_logs_object(time_span: TimeSpan=None) -> List[dict]:
+def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]:
     with Session() as session:
         logs = query_logs(session, time_span=time_span)
         data = [{'id': log.id,
@@ -78,7 +78,9 @@ def get_logs_object(time_span: TimeSpan=None) -> List[dict]:
                  'comment': log.comment,
                  'complete': any(child.log_type == 'complete' for child in get_children(session, log)),
                  'parent_id': log.parent_id} for log in logs]
-        return data
+    if reversed:
+        data.reverse()
+    return data
 
 
 def get_activities_object(time_span: TimeSpan=None) -> List[dict]:

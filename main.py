@@ -83,11 +83,6 @@ def get_log_table():
     logs = get_logs_object(time_span=time_span)
     return render_template('components/table_view.html', log_table=logs)
 
-# @app.route('/get_logs_v2', methods=['GET'])
-# def get_logs_v2():
-#     return redirect('/get_logs')
-
-
 @app.route('/log/<log_id>', methods=['GET'])
 def get_log(log_id):
     log = get_log_dict(log_id)
