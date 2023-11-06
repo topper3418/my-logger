@@ -53,13 +53,7 @@ async function getLog(log_id) {
 }
 
 
-async function getTreeHtml(target_date) {
-    const response = await fetch(`/log_tree?target_date=${target_date}`);
-    return await response.text();
-}
 
-async function getTableHtml(target_date) {
-    const response = await fetch(`/log_table?target_date=${target_date}`);
-    return await response.text();
-}
+
+
 

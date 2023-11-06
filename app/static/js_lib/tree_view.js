@@ -28,6 +28,15 @@ function get_collapsed_ids() {
     return collapsedIds;
 }
 
+function get_expanded_ids() {
+    const expanded = document.querySelectorAll('.children:not(.hidden)');
+    const expandedIds = [];
+    expanded.forEach(element => {
+        expandedIds.push(element.parentElement.dataset.log_id);
+    });
+    return expandedIds;
+}
+
 
 function populateTree(tree_html) {
     // this is where the tree will go
@@ -35,15 +44,56 @@ function populateTree(tree_html) {
     // non-rendered element to do our work on beforehand
     const tree = document.createElement('div');
     const collapsed_ids = get_collapsed_ids();
+    const expanded_ids = get_expanded_ids();
     //treeDiv.innerHTML = tree_html;
     // turn the html string into an element
     tree.innerHTML = tree_html;
     collapsed_ids.forEach(id => {
         const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
-        if (element) {
+        // if the element exists and is not already collapsed, collapse it
+        if (element && !element.querySelector('.children').classList.contains('hidden')) {
+            collapseChildrenHelper(element);
+        }
+    });
+    expanded_ids.forEach(id => {
+        const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
+        // if the element exists and is collapsed, expand it. 
+        if (element && element.querySelector('.children').classList.contains('hidden')) {
             collapseChildrenHelper(element);
         }
     });
 
     treeDiv.innerHTML = tree.innerHTML;
+}
+
+
+async function getTreeHtml(target_date) {
+    const response = await fetch(`/log_tree?target_date=${target_date}`);
+    return await response.text();
+}
+
+
+async function switchFocus(event) {
+    const log_id = event.target.parentElement.parentElement.dataset.log_id;
+    console.log(log_id);
+
+    const response = await fetch(`/submit`, {
+        method: 'POST',
+        body: JSON.stringify({ 'log-comment': `[${log_id}]`}),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    refreshViews();
+}
+
+
+function centerTable(event) {
+    const log_id = event.target.parentElement.parentElement.dataset.log_id;
+    const element = getLogTableElement(log_id);
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.classList.add('pulse-highlight');
+    setTimeout(() => {
+        element.classList.remove('pulse-highlight');
+    }, 2500);
 }

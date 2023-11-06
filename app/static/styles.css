@@ -33,6 +33,10 @@ h1 {
   text-align: center;
 }
 
+.highlighted {
+  background-color: yellow;
+}
+
 body {
   margin: 0;
   padding: 0;

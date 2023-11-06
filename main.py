@@ -89,11 +89,13 @@ def get_log_tree():
     tree = get_log_tree_object(time_span=time_span)
     return render_template('components/tree_view.html', log_tree=tree)
 
+
 @app.route('/log_table', methods=['GET'])
 def get_log_table():
     time_span = get_time_span(request.args)
     logs = get_logs_object(time_span=time_span)
     return render_template('components/table_view.html', log_table=logs)
+
 
 @app.route('/log/<log_id>', methods=['GET'])
 def get_log(log_id):
