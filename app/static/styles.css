@@ -33,6 +33,10 @@ h1 {
   text-align: center;
 }
 
+h2 {
+  text-align: center;
+}
+
 .highlighted {
   background-color: yellow;
 }
@@ -108,6 +112,10 @@ div {
   align-items: stretch;
 }
 
+.space-below{
+  margin-bottom: 20px;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -135,7 +143,17 @@ div {
 .tree-column {
   overflow-y: scroll;
   max-height: 100vh;
-  width: 33%;
+  width: 20%;
+}
+
+.center-column {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden;
+  /* max-height: 100vh; */
+  height: 100%;
+  width: 50%;
+  justify-content: space-between;
 }
 
 .wrapper {
@@ -150,16 +168,6 @@ div {
   max-height: 100vh;
   max-width: 100%;
 }
-
-.children {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-left: 20px;
-  border-left: 3px solid black;
-}
-
-
 
 .overlay {
   position: fixed;

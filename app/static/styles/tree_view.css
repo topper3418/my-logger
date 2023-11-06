@@ -32,6 +32,14 @@ p {
     width: 100%;
 }
 
+.children {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-left: 20px;
+  border-left: 3px solid black;
+}
+
 
 #log-tree {
     display: flex;

@@ -68,6 +68,14 @@ def get_current_activity_comment() -> str|None:
             return current_activity.active_log.comment
 
 
+def get_current_tree_data() -> List[dict]|None:
+    with Session() as session:
+        current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
+        if current_activity:
+            return [assemble_tree(session, current_activity.active_log)]
+
+
+
 def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]:
     with Session() as session:
         logs = query_logs(session, time_span=time_span)

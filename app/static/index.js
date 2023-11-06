@@ -1,14 +1,32 @@
+async function getCurrentActivityHtml() {
+    const response = await fetch('/current_activity');
+    const html = await response.text();
+    return html;
+}
+
 
 function populateCurrentActivity(activity) {
     //get the h2 with the id of current_activity
-    const header = document.querySelector('#current_activity');
-    header.innerHTML = 'Current Activity:';
-    header.innerHTML += `<br>${activity}`;
+    const CADiv = document.querySelector('#current_activity');
+    //set the innerHTML of that div to the activity
+    CADiv.innerHTML = activity;
 }
 
 async function refreshCurrentActivity() {
-    const activity = await getCurrentactivity();
+    const activity = await getCurrentActivityHtml();
     populateCurrentActivity(activity);
+}
+
+async function switchToParent(parent_id) {
+    console.log(parent_id);
+    const response = await fetch(`/submit`, {
+        method: 'POST',
+        body: JSON.stringify({ 'log-comment': `[${parent_id}]`}),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    refreshViews();
 }
 
 async function refreshViews() { 
