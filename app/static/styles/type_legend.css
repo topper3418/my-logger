@@ -1,0 +1,7 @@
+.legend-container {
+    padding: 10px;
+    align-items: center;
+    border: 1px solid black;
+    height: auto;
+    border-radius: 5px;
+}

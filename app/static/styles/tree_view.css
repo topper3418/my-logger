@@ -1,0 +1,55 @@
+p {
+    margin: 0;
+    padding: 0;
+}
+
+.logIdLabel {
+    cursor: pointer; 
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.logIdLabel:hover {
+    text-decoration: underline;
+}
+
+.logComment {
+    margin: 0px 0px 0px 0px;
+    flex-grow: 1;
+}
+
+.log-element {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.log-element-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+
+#log-tree {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+  }
+
+  
+.hidden {
+    display: none;
+  }
+  
+.bordered {
+    border: 1px solid black;
+    background-color: rgba(128, 128, 128, 0.5);
+  }

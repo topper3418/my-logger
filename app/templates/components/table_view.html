@@ -1,0 +1,17 @@
+
+<table id="log-table-view">
+    <tbody>
+        {% for row in log_table %}
+            <tr data-id="{{ row.id }}" class="task-type-{{ row.log_type }}" ondblclick="renderOverlay(logId={{ row.id }})">
+                <td>
+                    {{ row.timestamp }}
+                </td>
+                <td>
+                    {{ row.comment }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>    
+</table>
+<script src="{{ url_for('static', filename='js_lib/log_table.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/log_table.css') }}">

@@ -5,27 +5,15 @@
         <input type="number" id="edit-parent-id" name="edit-parent-id" min="1" value="{{ parent_id }}">
 
         <label for="edit-log-type-dropdown">Type:</label>
-        <select id="edit-log-type-dropdown" name="edit-log-type-dropdown">
-            {% for l_type in log_types %}
-                {% if l_type == log_type %}
-                    <option value="{{ l_type }}" selected>{{ l_type }}</option>
-                {% else %}
-                    <option value="{{ l_type }}">{{ l_type }}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
+        {{ type_dropdown|safe }}
 
         <label for="edit-comment">Comment:</label>
         <textarea id="edit-comment" name="edit-comment" rows="4" cols="50">{{ comment }}</textarea>
 
-        <div id="button-container">
-            <button onclick="submitEdit()">Submit</button>
-            <button onclick="removeOverlay()">Cancel</button>
+        <div class="row-container" id="button-container">
+            <button class="submit-button" onclick="submitEdit()">Submit</button>
+            <button class="cancel-button" onclick="removeOverlay()">Cancel</button>
         </div>
     </div>
 </div>
-<script>
-    const submitEditButton = getSubmitButton();
-    submitEditButton.addEventListener('click', submitEdit);
-    populateLogTypeDropdown(logTypeData, dropdown_id='edit-log-type-dropdown');
-</script>
+

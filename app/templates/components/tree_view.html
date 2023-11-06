@@ -1,25 +1,26 @@
 {% macro render_log(log) %}
-<div class="column-container">
-    <div class="row-cluster log-element" data-log_id="{{ log.id }}" style="color: {{ type_color }};">
-        <p style="cursor: pointer; margin: 0px 15px 0px 0px;">
-            <b>{{ log.id }}</b>: 
+<div class="log-element-container" data-log_id="{{ log.id }}">
+    <div class="row-cluster log-element task-type-{{  log.log_type  }}">
+        <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="collapseChildren(event)">
+            {{ log.id }}:
         </p>
-        <p style="flex-grow: 1;">{{ log.comment }}</p>
-        <p class="duration" data-time_spent="{{ log.direct_duration }}" data-total_time_spent="{{ log.total_duration }}"
-            style="margin: 0px 0px 0px 15px; padding: 0px;"></p>
+        <p class="logComment">{{ log.comment }}</p>
+        <p class="duration" data-time_spent="{{ log.direct_duration }}" data-total_time_spent="{{ log.total_duration }}">
+            {{ log.duration_string }} 
+        </p>
     </div>
-    {% if log.children %}
     <div class="children">
         {% for child in log.children %}
             {{ render_log(child) }}
         {% endfor %}
     </div>
-    {% endif %}
 </div>
 {% endmacro %}
 
-<div class="log-tree">
+<div id="log-tree-view">
     {% for log in log_tree %}
         {{ render_log(log) }}
     {% endfor %}
 </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/tree_view.css') }}">
+<script src="{{ url_for('static', filename='js_lib/tree_view.js') }}"></script>
