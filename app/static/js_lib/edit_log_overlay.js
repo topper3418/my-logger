@@ -10,7 +10,6 @@ function getOverlayData() {
 // Function to for the submit button
 async function submitEdit() {
     const data = getOverlayData();
-    console.log(data);
     log_id = data.log_id;
     await fetch(`/edit_log/${log_id}`, {
         method: 'POST',

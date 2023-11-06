@@ -35,14 +35,14 @@ function populateTree(tree_html) {
     // non-rendered element to do our work on beforehand
     const tree = document.createElement('div');
     const collapsed_ids = get_collapsed_ids();
-    console.log(collapsed_ids);
     //treeDiv.innerHTML = tree_html;
     // turn the html string into an element
     tree.innerHTML = tree_html;
     collapsed_ids.forEach(id => {
         const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
-        console.log(element);
-        collapseChildrenHelper(element);
+        if (element) {
+            collapseChildrenHelper(element);
+        }
     });
 
     treeDiv.innerHTML = tree.innerHTML;

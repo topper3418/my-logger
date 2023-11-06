@@ -1,17 +1,3 @@
-async function getLogs(start_time, end_time) {
-    const response = await fetch(`/get_logs?start_time=${start_time}&end_time=${end_time}`);
-    const logs = await response.json();
-    return logs;
-}
-
-
-async function getAllLogs() {
-    const response = await fetch('/get_logs');
-    const logs = await response.json();
-    return logs;
-}
-
-
 async function getCurrentactivity() {
     const response = await fetch('/current_activity');
     const activity = await response.json();
@@ -44,42 +30,13 @@ async function submitLog() {
 }
 
 
-async function getLogTree(start_time, end_time) {
-    // paramaters are start_time and end_time, midnight to now
-    const response = await fetch(`/get_log_tree?start_time=${start_time}&end_time=${end_time}`);
-    const tree = await response.json();
-    return tree;
-}
-
-
 async function getLogTypes() {
     const response = await fetch('/get_log_types');
     const types = await response.json();
     return types;
 }
 
-
-async function getTodayData() {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const start_time = startOfDay.getTime();
-    const end_time = now.getTime();
-    const response = await fetch(`/get_logs?start_time=${start_time}&end_time=${end_time}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
-    return await response.json();
-}
-
 async function getDataForDate(date) {
-    console.log(date);
-    // const startOfDay = new Date(date);
-    // set the start time to midnight
-    // startOfDay.setHours(0, 0, 0, 0);
-    // const start_time = startOfDay.getTime();
-    // const end_time = start_time + 86400000;
     const response = await fetch(`/get_logs?target_date=${date}`, {
         method: 'GET',
         headers: {
