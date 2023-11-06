@@ -28,18 +28,14 @@
                     <div id="type_legend" class="push-left">
                         {{ type_legend|safe }}
                     </div>
-                    <div class="row-cluster">
-                        <div class="column-container">
-                            <div class="row-container">
-                                <div id="type-dropdown-container" class="row-cluster">
-                                    {{ type_dropdown|safe }}
-                                </div>
+                    <div class="column-container grow space-left">
+                        <div class="row-container">
+                            <div id="type-dropdown-container" class="row-cluster">
+                                {{ type_dropdown|safe }}
                             </div>
-                            <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
-                        </div>
-                        <div class="push-bottom">
                             <button class="submit-button" id="submit">Add Log</button>
                         </div>
+                        <textarea id="log-comment" name="log-comment" rows="5" cols="50"></textarea>
                     </div>
                 </div>
             </div>

@@ -112,8 +112,16 @@ div {
   align-items: stretch;
 }
 
+.grow {
+  flex-grow: 1;
+}
+
 .space-below{
   margin-bottom: 20px;
+}
+
+.space-left{
+  margin-left: 20px;
 }
 
 .row {

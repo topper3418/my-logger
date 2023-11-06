@@ -37,10 +37,14 @@ def index():
                                     default_log_type=default_log_types[0])
     current_tree_data = get_current_tree_data()
     parent_id = current_tree_data[0]['parent_id']
+    current_activity_comment = current_tree_data[0]['comment']
+    current_activity_type = current_tree_data[0]['log_type']
     current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
     current_activity = render_template('components/current_activity.html', 
-                                       current_activity=current_tree,
-                                       parent_id=parent_id)
+                                       current_tree=current_tree,
+                                       parent_id=parent_id,
+                                       current_activity=current_activity_comment,
+                                       current_activity_type=current_activity_type)
     return render_template('index.html', 
                            date=date, 
                            log_tree=log_tree, 
@@ -79,9 +83,11 @@ def get_current_activity():
     current_tree_data = get_current_tree_data()
     current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
     parent_id = current_tree_data[0]['parent_id']
+    current_activity = current_tree_data[0]['comment']
     return render_template('components/current_activity.html', 
-                           current_activity=current_tree,
-                           parent_id=parent_id)
+                           current_tree=current_tree,
+                           parent_id=parent_id,
+                           current_activity=current_activity)
 
 
 @app.route('/get_activity_history', methods=['GET'])

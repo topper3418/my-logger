@@ -1,8 +1,8 @@
 <div class="column-conatiner">
     <div class="row-container space-below">
         <button data-parent_id="" onclick="switchToParent({{ parent_id }})">Go Up</button>
-        <h2>Current Activity:</h2>
+        <h2 class="task-type-{{ current_activity_type }}">Current Activity: "{{current_activity }}"</h2>
         <div></div>
     </div>
-    {{ current_activity|safe }}
+    {{ current_tree|safe }}
 </div>
