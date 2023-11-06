@@ -12,3 +12,16 @@ async function renderOverlay(logId) {
     // show the overlay
     showOverlay();
 }
+
+
+async function getTableHtml(target_date) {
+    const response = await fetch(`/log_table?target_date=${target_date}`);
+    return await response.text();
+}
+
+
+function getLogTableElement(logId) {
+    return document.querySelector(`tr[data-id="${logId}"]`);
+}
+
+

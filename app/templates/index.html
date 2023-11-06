@@ -20,9 +20,9 @@
                     {{ log_tree|safe }}
                 </div>
             </div>
-            <div class="column-container">
+            <div class="center-column">
                 <div id="current_activity">
-                    <h2>Current Activity: <br><t>{{ current_activity }}</t></h2>
+                    {{ current_activity|safe }}
                 </div>
                 <div class="row-container">
                     <div id="type_legend" class="push-left">
@@ -58,10 +58,6 @@
     <script>
         
         const logTypeData = getLogTypes();
-
-        window.addEventListener('load', async function () {
-            refreshCurrentActivity();
-        });
 
         const textarea = document.getElementById('log-comment');
         textarea.addEventListener('keydown', function (event) {

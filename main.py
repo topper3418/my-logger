@@ -7,14 +7,14 @@ from datetime import datetime
 from icecream import ic
 
 from app.comment_parser import parse_comment
-from app.db_funcs import (get_current_activity_comment, 
-                          set_activity, 
+from app.db_funcs import (set_activity, 
                           add_log, 
                           get_logs_object,
                           get_activities_object,
                           get_log_tree_object,
                           get_log_dict,
-                          edit_log as db_edit_log)
+                          edit_log as db_edit_log,
+                          get_current_tree_data)
 from app.util import get_time_span
 from app import app, default_log_types
 
@@ -35,7 +35,12 @@ def index():
                                     log_types=default_log_types, 
                                     dropdown_id='log-type-dropdown',
                                     default_log_type=default_log_types[0])
-    current_activity = get_current_activity_comment()
+    current_tree_data = get_current_tree_data()
+    parent_id = current_tree_data[0]['parent_id']
+    current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
+    current_activity = render_template('components/current_activity.html', 
+                                       current_activity=current_tree,
+                                       parent_id=parent_id)
     return render_template('index.html', 
                            date=date, 
                            log_tree=log_tree, 
@@ -71,8 +76,12 @@ def get_log_types():
 
 @app.route('/current_activity', methods=['GET'])
 def get_current_activity():
-    comment = get_current_activity_comment()
-    return jsonify(comment or 'no current task')
+    current_tree_data = get_current_tree_data()
+    current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
+    parent_id = current_tree_data[0]['parent_id']
+    return render_template('components/current_activity.html', 
+                           current_activity=current_tree,
+                           parent_id=parent_id)
 
 
 @app.route('/get_activity_history', methods=['GET'])
@@ -89,11 +98,13 @@ def get_log_tree():
     tree = get_log_tree_object(time_span=time_span)
     return render_template('components/tree_view.html', log_tree=tree)
 
+
 @app.route('/log_table', methods=['GET'])
 def get_log_table():
     time_span = get_time_span(request.args)
     logs = get_logs_object(time_span=time_span)
     return render_template('components/table_view.html', log_table=logs)
+
 
 @app.route('/log/<log_id>', methods=['GET'])
 def get_log(log_id):
