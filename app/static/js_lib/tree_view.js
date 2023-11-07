@@ -26,6 +26,7 @@ function get_collapsed_ids() {
     collapsed.forEach(element => {
         collapsedIds.push(element.parentElement.dataset.log_id);
     });
+    console.log(collapsedIds)
     return collapsedIds;
 }
 
@@ -76,7 +77,6 @@ async function getTreeHtml(target_date) {
 
 async function switchFocus(event) {
     const log_id = event.target.parentElement.parentElement.dataset.log_id;
-    console.log(log_id);
 
     const response = await fetch(`/submit`, {
         method: 'POST',

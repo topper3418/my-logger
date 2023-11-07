@@ -16,6 +16,10 @@ class Log(db.Model):
     @property
     def has_complete_child(self):
         return any(child.log_type == 'complete' for child in self.children)
+    
+    @property
+    def is_from_today(self):
+        return self.timestamp.date() == datetime.now().date()
 
     def __repr__(self):
         return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - {self.comment}>'

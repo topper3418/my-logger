@@ -1,12 +1,12 @@
 {% macro render_log(log) %}
 <div class="log-element-container" data-log_id="{{ log.id }}">
-    <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %}">
+    <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %} {% if not log.is_from_today %} not-today {% endif %}">
         <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="collapseChildren(event)">
             {{ log.id }}:
         </p>
         <p class="logComment" ondblclick="switchFocus(event)" onclick="centerTable(event)">{{ log.comment }}</p>
         <p class="duration" data-time_spent="{{ log.direct_duration }}" data-total_time_spent="{{ log.total_duration }}">
-            {{ log.duration_string }} 
+            {{ log.direct_duration_string if not log.complete else log.total_duration_string}} 
         </p>
     </div>
     <div class="children {% if log.complete %} hidden {% endif %}">

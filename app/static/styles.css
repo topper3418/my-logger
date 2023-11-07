@@ -41,6 +41,20 @@ h2 {
   background-color: yellow;
 }
 
+.not-today {
+  background-color: grey;
+  background-image: linear-gradient(45deg,  transparent 10%, #e6e6e6 10%,
+                                            transparent 20%, #e6e6e6 20%,
+                                            transparent 30%, #e6e6e6 30%,
+                                            transparent 40%, #e6e6e6 40%, 
+                                            transparent 50%, #e6e6e6 50%,
+                                            transparent 60%, #e6e6e6 60%,
+                                            transparent 70%, #e6e6e6 70%,
+                                            transparent 80%, #e6e6e6 80%,
+                                            transparent 90%, #e6e6e6 90%, 
+                                           transparent);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -64,6 +78,14 @@ div {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  margin: 0;
+  padding: 0;
+}
+
+.centered-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
   margin: 0;
   padding: 0;
 }
@@ -214,6 +236,14 @@ div {
 
 .task-type-distraction {
   color: purple;
+}
+
+.task-type-promote {
+  color: pink;
+}
+
+.task-type-import {
+  color: rgb(245, 245, 123);
 }
 
 #main-title-banner {

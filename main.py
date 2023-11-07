@@ -15,7 +15,8 @@ from app.db_funcs import (set_activity,
                           get_log_dict,
                           edit_log as db_edit_log,
                           get_current_tree_data,
-                          get_current_activity_comment)
+                          get_current_activity_comment,
+                          get_current_activity_log_dict)
 from app.util import get_time_span
 from app import app, default_log_types
 
@@ -82,13 +83,16 @@ def get_log_types():
 @app.route('/current_activity', methods=['GET'])
 def get_current_activity():
     current_tree_data = get_current_tree_data()
-    current_activity_comment = get_current_activity_comment()
     current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
-    parent_id = current_tree_data[0]['parent_id']
+    current_activity_log = get_current_activity_log_dict()
+    current_activity_comment = current_activity_log['comment']
+    parent_id = current_activity_log['parent_id']
+    current_activity_type = current_activity_log['log_type']
     return render_template('components/current_activity.html', 
                            current_tree=current_tree,
                            parent_id=parent_id,
-                           current_activity=current_activity_comment)
+                           current_activity=current_activity_comment,
+                           current_activity_type=current_activity_type)
 
 
 @app.route('/get_activity_history', methods=['GET'])

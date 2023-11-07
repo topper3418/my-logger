@@ -81,7 +81,7 @@ def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]
         data = [{'id': log.id,
                  'timestamp': log.timestamp.strftime('%H:%M'),
                  'log_type': log.log_type,
-                 'time_spent': get_log_active_time(session, log),
+                 'time_spent': get_log_today_active_time(session, log),
                  'comment': log.comment,
                  'complete': any(child.log_type == 'complete' for child in get_children(session, log)),
                  'parent_id': log.parent_id} for log in logs]
@@ -105,8 +105,16 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
     with Session() as session:
         logs = query_logs(session, time_span=time_span)
         log_ids = [log.id for log in logs]
-        orphans = [log for log in logs if log.parent_id not in log_ids]
-        tree = [assemble_tree(session, orphan) for orphan in orphans]
+        root_logs = [log for log in logs if log.parent_id not in log_ids]
+        # if the orphan is an import, bring in the parent instead and put it in the back
+        imports = []
+        for log in root_logs:
+            if log.log_type == 'import':
+                parent = log.parent
+                if parent:
+                    imports.append(parent)
+                    root_logs.remove(log)
+        tree = [assemble_tree(session, root) for root in root_logs + imports]
     return tree
 
 
@@ -118,6 +126,13 @@ def get_log_dict(log_id: int) -> dict:
                 'log_type': log.log_type,
                 'comment': log.comment,
                 'parent_id': log.parent_id}
+
+
+def get_current_activity_log_dict() -> dict:
+    with Session() as session:
+        current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
+        if current_activity:
+            return get_log_dict(current_activity.active_log_id)
 
 #############################################################
 ## models getters
@@ -168,11 +183,16 @@ def get_activity_duration(session, activity: Activity) -> int:
         return (datetime.now() - activity.timestamp).total_seconds()
 
 
+def get_log_today_active_time(session, log: Log) -> int:
+    """gets the total duration of activities linked to this log, today"""
+    activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
+    return sum([get_activity_duration(session, activity) for activity in activities if activity.timestamp.date() == datetime.now().date()])
+
+
 def get_log_active_time(session, log: Log) -> int:
-    """gets the total duration of activities with this log as the parent"""
+    """gets the total duration of activities linked to this log"""
     activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
     return sum([get_activity_duration(session, activity) for activity in activities])
-
 
 def has_children(session, log: Log) -> bool:
     """returns True if the log has children, False otherwise"""
@@ -181,7 +201,7 @@ def has_children(session, log: Log) -> bool:
 
 def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: List[dict]=None) -> dict:
     children = manual_children or [assemble_tree(session, child) for child in log.children]
-    direct_duration = get_log_active_time(session, log)
+    direct_duration = get_log_today_active_time(session, log)
     if children:
         total_duration = sum([child['total_duration'] for child in children]) + direct_duration
     else:
@@ -194,7 +214,9 @@ def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: 
                 'complete': log.has_complete_child,
                 'direct_duration': direct_duration,
                 'total_duration': total_duration,
-                'duration_string': get_duration_string(direct_duration),
+                'direct_duration_string': get_duration_string(direct_duration),
+                'total_duration_string': get_duration_string(total_duration),
+                'is_from_today': log.is_from_today,
                 'children': children}
     # propagate up means to nest the dict in parents until the root is reached
     if propagate_up:
