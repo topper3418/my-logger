@@ -11,6 +11,7 @@ db = SQLAlchemy(app)
 
 default_log_types = [
     'thought',
+    'question',
     'task',
     'error',
     'complete',

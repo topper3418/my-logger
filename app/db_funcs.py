@@ -106,14 +106,28 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
         logs = query_logs(session, time_span=time_span)
         log_ids = [log.id for log in logs]
         root_logs = [log for log in logs if log.parent_id not in log_ids]
+        orig_root_logs = root_logs
+        ic(orig_root_logs)
         # if the orphan is an import, bring in the parent instead and put it in the back
-        imports = []
+        imports, import_ids = [], []
         for log in root_logs:
+            ic(log)
             if log.log_type == 'import':
+                ic.disable()
+                import_detected = log
+                ic(import_detected)
                 parent = log.parent
+                ic(parent)
                 if parent:
                     imports.append(parent)
-                    root_logs.remove(log)
+                    import_ids.append(log.parent_id)
+                else:
+                    parentless_import = log
+                    ic(parentless_import)
+                ic.enable()
+        ic(root_logs)
+        # remove root logs that are children of imports so they aren't double-rendered. 
+        root_logs = [log for log in root_logs if log.parent_id not in import_ids]
         tree = [assemble_tree(session, root) for root in root_logs + imports]
     return tree
 
@@ -221,7 +235,6 @@ def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: 
     # propagate up means to nest the dict in parents until the root is reached
     if propagate_up:
         while log.parent_id:
-            ic(log.parent_id)
             dict_out = assemble_tree(session, log.parent, manual_children=[dict_out])
             log = log.parent
 

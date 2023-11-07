@@ -22,7 +22,7 @@ class Log(db.Model):
         return self.timestamp.date() == datetime.now().date()
 
     def __repr__(self):
-        return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - {self.comment}>'
+        return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - type: {self.log_type} - {self.comment}>'
 
 class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
