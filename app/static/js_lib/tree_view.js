@@ -1,6 +1,7 @@
 
 function collapseChildrenHelper(element) {
-    children = element.querySelector('.children');
+    const children = element.querySelector('.children');
+    const logElement = element.querySelector('.log-element');
     // if its hidden, show it and set the time to be the non-cumulative time
     logDurationElement = element.querySelector('.duration');
     if (children.classList.contains('hidden')) {
@@ -9,7 +10,7 @@ function collapseChildrenHelper(element) {
         logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.total_time_spent);
     }
     children.classList.toggle('hidden');
-    element.classList.toggle('bordered');
+    logElement.classList.toggle('bordered');
 }
 
 

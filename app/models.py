@@ -13,6 +13,10 @@ class Log(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('log.id'))
     parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
 
+    @property
+    def has_complete_child(self):
+        return any(child.log_type == 'complete' for child in self.children)
+
     def __repr__(self):
         return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - {self.comment}>'
 

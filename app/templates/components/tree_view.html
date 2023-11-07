@@ -1,6 +1,6 @@
 {% macro render_log(log) %}
 <div class="log-element-container" data-log_id="{{ log.id }}">
-    <div class="row-cluster log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %}">
+    <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %}">
         <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="collapseChildren(event)">
             {{ log.id }}:
         </p>
@@ -17,7 +17,7 @@
 </div>
 {% endmacro %}
 
-<div id="log-tree-view">
+<div id="log-tree-view" class="column-container grow">
     {% for log in log_tree %}
         {{ render_log(log) }}
     {% endfor %}

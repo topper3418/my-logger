@@ -72,8 +72,7 @@ def get_current_tree_data() -> List[dict]|None:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
         if current_activity:
-            return [assemble_tree(session, current_activity.active_log)]
-
+            return [assemble_tree(session, current_activity.active_log, propagate_up=True)]
 
 
 def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]:
@@ -180,11 +179,8 @@ def has_children(session, log: Log) -> bool:
     return bool(session.query(Log).filter(Log.parent_id == log.id).first())
 
 
-def assemble_tree(session, log: Log) -> dict:
-    """returns a dictionary representing the given log and its children"""
-    children = get_children(session, log)
-    has_complete = any(child.log_type == 'complete' for child in children)
-    children = [assemble_tree(session, child) for child in children]
+def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: List[dict]=None) -> dict:
+    children = manual_children or [assemble_tree(session, child) for child in log.children]
     direct_duration = get_log_active_time(session, log)
     if children:
         total_duration = sum([child['total_duration'] for child in children]) + direct_duration
@@ -195,9 +191,16 @@ def assemble_tree(session, log: Log) -> dict:
                 'log_type': log.log_type if log.log_type else None,
                 'comment': log.comment,
                 'parent_id': log.parent_id if log.parent_id else None,
-                'complete': has_complete,
+                'complete': log.has_complete_child,
                 'direct_duration': direct_duration,
                 'total_duration': total_duration,
                 'duration_string': get_duration_string(direct_duration),
                 'children': children}
+    # propagate up means to nest the dict in parents until the root is reached
+    if propagate_up:
+        while log.parent_id:
+            ic(log.parent_id)
+            dict_out = assemble_tree(session, log.parent, manual_children=[dict_out])
+            log = log.parent
+
     return dict_out
