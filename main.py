@@ -27,7 +27,6 @@ from app import app, default_log_types
 def index():
     date = datetime.now().strftime('%Y-%m-%d')
     time_span = get_time_span({'target_date': date})
-
     tree_data = get_log_tree_object(time_span)
     table_data = get_logs_object(time_span)
     log_tree = render_template('components/tree_view.html', log_tree=tree_data)

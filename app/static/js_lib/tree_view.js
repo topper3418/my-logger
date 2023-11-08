@@ -20,8 +20,8 @@ function collapseChildren(event) {
 }
 
 
-function get_collapsed_ids() {
-    const collapsed = document.querySelectorAll('.children.hidden');
+function get_collapsed_ids(targetDiv) {
+    const collapsed = targetDiv.querySelectorAll('.children.hidden');
     const collapsedIds = [];
     collapsed.forEach(element => {
         collapsedIds.push(element.parentElement.dataset.log_id);
@@ -30,8 +30,8 @@ function get_collapsed_ids() {
     return collapsedIds;
 }
 
-function get_expanded_ids() {
-    const expanded = document.querySelectorAll('.children:not(.hidden)');
+function get_expanded_ids(targetDiv) {
+    const expanded = targetDiv.querySelectorAll('.children:not(.hidden)');
     const expandedIds = [];
     expanded.forEach(element => {
         expandedIds.push(element.parentElement.dataset.log_id);
@@ -40,13 +40,11 @@ function get_expanded_ids() {
 }
 
 
-function populateTree(tree_html) {
-    // this is where the tree will go
-    const treeDiv = document.getElementById('log-tree');
+function populateTree(tree_html, targetDiv) {
     // non-rendered element to do our work on beforehand
     const tree = document.createElement('div');
-    const collapsed_ids = get_collapsed_ids();
-    const expanded_ids = get_expanded_ids();
+    const collapsed_ids = get_collapsed_ids(targetDiv);
+    const expanded_ids = get_expanded_ids(targetDiv);
     //treeDiv.innerHTML = tree_html;
     // turn the html string into an element
     tree.innerHTML = tree_html;
@@ -65,7 +63,7 @@ function populateTree(tree_html) {
         }
     });
 
-    treeDiv.innerHTML = tree.innerHTML;
+    targetDiv.innerHTML = tree.innerHTML;
 }
 
 

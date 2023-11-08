@@ -30,12 +30,13 @@ async function switchToParent(parent_id) {
 }
 
 async function refreshViews() { 
-    refreshCurrentActivity();
     const target_date = document.getElementById('target-date').value;
     const tree_html = await getTreeHtml(target_date);
     const table_html = await getTableHtml(target_date);
-    populateTree(tree_html);
+    const activity = await getCurrentActivityHtml();
+    populateTree(tree_html, document.getElementById('log-tree'));
     populateTable(table_html);
+    populateCurrentActivity(activity);
 }
 
 
