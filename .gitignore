@@ -2,3 +2,6 @@
 /__pycache__
 /instance
 app/__pycache__/
+cli.spec
+/dist
+/build
