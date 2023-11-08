@@ -223,7 +223,7 @@ div {
 }
 
 .task-type-task {
-  color: orange;
+  color: darkorange;
 }
 
 .task-type-error {
@@ -244,6 +244,10 @@ div {
 
 .task-type-import {
   color: rgb(245, 245, 123);
+}
+
+.task-type-question {
+  color: lightcoral;
 }
 
 #main-title-banner {
