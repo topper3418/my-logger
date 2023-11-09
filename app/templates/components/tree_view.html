@@ -1,5 +1,5 @@
 {% macro render_log(log) %}
-<div class="log-element-container" data-log_id="{{ log.id }}">
+<div class="log-element-container {{ log.days_ago_class }} {% if not log.days_ago_class %} not-today {% endif %}" data-log_id="{{ log.id }}">
     <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %} {% if not log.is_from_today %} not-today {% endif %}">
         <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="collapseChildren(event)">
             {{ log.id }}:

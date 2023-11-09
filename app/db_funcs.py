@@ -81,7 +81,7 @@ def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]
         data = [{'id': log.id,
                  'timestamp': log.timestamp.strftime('%H:%M'),
                  'log_type': log.log_type,
-                 'time_spent': get_log_today_active_time(session, log),
+                 'time_spent': get_log_active_time(session, log),
                  'comment': log.comment,
                  'complete': any(child.log_type == 'complete' for child in get_children(session, log)),
                  'parent_id': log.parent_id} for log in logs]
@@ -122,7 +122,7 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
             imported_log_descendents += get_descendants(session, imported_log)
         imported_log_ids += [log.id for log in imported_log_descendents]
         root_logs = [log for log in root_logs if log.parent_id not in imported_log_ids]
-        tree = [assemble_tree(session, root) for root in root_logs + imported_logs]
+        tree = [assemble_tree(session, root, time_span) for root in root_logs + imported_logs]
     return tree
 
 
@@ -201,29 +201,40 @@ def get_activity_duration(session, activity: Activity) -> int:
         return (datetime.now() - activity.timestamp).total_seconds()
 
 
-def get_log_today_active_time(session, log: Log) -> int:
+def get_log_active_time(session, log: Log, time_span: TimeSpan=None) -> int:
     """gets the total duration of activities linked to this log, today"""
-    activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
-    return sum([get_activity_duration(session, activity) for activity in activities if activity.timestamp.date() == datetime.now().date()])
+    if not time_span:
+        activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
+        return sum([get_activity_duration(session, activity) for activity in activities if activity.timestamp.date() == datetime.now().date()])
+    else:
+        activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
+        return sum([get_activity_duration(session, activity) for activity in activities if activity.timestamp in time_span])
 
-
-def get_log_active_time(session, log: Log) -> int:
-    """gets the total duration of activities linked to this log"""
-    activities = session.query(Activity).filter(Activity.active_log_id == log.id).all()
-    return sum([get_activity_duration(session, activity) for activity in activities])
 
 def has_children(session, log: Log) -> bool:
     """returns True if the log has children, False otherwise"""
     return bool(session.query(Log).filter(Log.parent_id == log.id).first())
 
 
-def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: List[dict]=None) -> dict:
+def assemble_tree(session, log: Log, 
+                           time_span: TimeSpan=None, 
+                           propagate_up: bool=False, 
+                           manual_children: List[dict]=None) -> dict:
     children = manual_children or [assemble_tree(session, child) for child in log.children]
-    direct_duration = get_log_today_active_time(session, log)
+    direct_duration = get_log_active_time(session, log, time_span=time_span)
     if children:
         total_duration = sum([child['total_duration'] for child in children]) + direct_duration
     else:
         total_duration = direct_duration
+    days_ago = log.days_ago
+    word = ['',
+            'one',
+            'two',
+            'three',
+            'four',
+            'many'][days_ago if days_ago <= 4 else 5]
+    days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
+
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
                 'log_type': log.log_type if log.log_type else None,
@@ -234,7 +245,9 @@ def assemble_tree(session, log: Log, propagate_up: bool=False, manual_children: 
                 'total_duration': total_duration,
                 'direct_duration_string': get_duration_string(direct_duration),
                 'total_duration_string': get_duration_string(total_duration),
-                'is_from_today': log.is_from_today,
+                'is_from_today': log.days_ago == 0,
+                'days_ago_class': days_ago_class,
+                'days_ago': log.days_ago,
                 'children': children}
     # propagate up means to nest the dict in parents until the root is reached
     if propagate_up:

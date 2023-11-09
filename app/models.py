@@ -20,6 +20,10 @@ class Log(db.Model):
     @property
     def is_from_today(self):
         return self.timestamp.date() == datetime.now().date()
+    
+    @property 
+    def days_ago(self):
+        return (datetime.now().date() - self.timestamp.date()).days
 
     def __repr__(self):
         return f'<Log {self.id} - {self.timestamp} - parent: {self.parent_id} - type: {self.log_type} - {self.comment}>'
@@ -57,3 +61,6 @@ class TimeSpan:
         else:
             return None
     
+    
+    def __contains__(self, timestamp):
+        return self.start <= timestamp <= self.end
