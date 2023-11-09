@@ -16,7 +16,8 @@ from app.db_funcs import (set_activity,
                           edit_log as db_edit_log,
                           get_current_tree_data,
                           get_current_activity_comment,
-                          get_current_activity_log_dict)
+                          get_current_activity_log_dict,
+                          get_promoted_logs_object)
 from app.util import get_time_span
 from app import app, default_log_types
 
@@ -68,7 +69,7 @@ def submit():
 
 
 @app.route('/get_logs', methods=['GET'])
-def get_logs():
+def get_logs(): 
     time_span = get_time_span(request.args)
     data = get_logs_object(time_span=time_span)
     return jsonify(data)
@@ -83,6 +84,21 @@ def get_log_types():
 def get_current_activity():
     current_tree_data = get_current_tree_data()
     current_tree = render_template('components/tree_view.html', log_tree=current_tree_data)
+    current_activity_log = get_current_activity_log_dict()
+    current_activity_comment = current_activity_log['comment']
+    parent_id = current_activity_log['parent_id']
+    current_activity_type = current_activity_log['log_type']
+    return render_template('components/current_activity.html', 
+                           current_tree=current_tree,
+                           parent_id=parent_id,
+                           current_activity=current_activity_comment,
+                           current_activity_type=current_activity_type)
+
+
+@app.route('/promoted_activity', methods=['GET'])
+def get_promoted_activity():
+    promoted_tree_data = get_promoted_logs_object()
+    current_tree = render_template('components/tree_view.html', log_tree=promoted_tree_data)
     current_activity_log = get_current_activity_log_dict()
     current_activity_comment = current_activity_log['comment']
     parent_id = current_activity_log['parent_id']

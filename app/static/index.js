@@ -5,6 +5,13 @@ async function getCurrentActivityHtml() {
 }
 
 
+async function getPromotedActivityHtml() {
+    const response = await fetch('/promoted_activity');
+    const html = await response.text();
+    return html;
+}
+
+
 function populateCurrentActivity(activity) {
     //get the h2 with the id of current_activity
     const CADiv = document.querySelector('#current_activity');
@@ -13,8 +20,27 @@ function populateCurrentActivity(activity) {
 }
 
 async function refreshCurrentActivity() {
-    const activity = await getCurrentActivityHtml();
+    mode = document.querySelector('#current_activity').dataset.mode;
+    console.log(mode)
+    let activity;
+    if (mode == 'current_activity') {
+        activity = await getCurrentActivityHtml();
+    }
+    else {
+        activity = await getPromotedActivityHtml();
+    }
     populateCurrentActivity(activity);
+}
+
+function toggleCenterView() {
+    centerViewElement = document.querySelector('#current_activity');
+    if (centerViewElement.dataset.mode == 'current_activity') {
+        centerViewElement.dataset.mode = 'promoted';
+    }
+    else {
+        centerViewElement.dataset.mode = 'current_activity';
+    }
+    refreshCurrentActivity();
 }
 
 async function switchToParent(parent_id) {

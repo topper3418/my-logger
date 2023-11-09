@@ -129,14 +129,13 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
 def get_promoted_logs_object() -> List[dict]:
     with Session() as session:
         promotions = session.query(Log).filter(Log.log_type == 'promote').all()
+        promoted = [promotion.parent for promotion in promotions]
         promoted_descendants = []
-        for promotion in promotions:
+        for promotion in promoted:
             promoted_descendants += get_descendants(session, promotion)
-        promotions = [promotion for promotion in promotions if promotion not in promoted_descendants]
-        tree = [assemble_tree(session, promotion, promotion_mode=True) for promotion in promotions]
-        # if one promotion is a descendant of another, it should be a child of that promotion
-        # so we need to remove the child from the list
-        # and append it to the children list to add back
+        promoted = [promotion for promotion in promoted if promotion not in promoted_descendants]
+        tree = [assemble_tree(session, promotion, promotion_mode=True) for promotion in promoted]
+    return tree
 
 
 def get_log_dict(log_id: int) -> dict:
@@ -245,10 +244,11 @@ def assemble_tree(session, log: Log,
                            propagate_up: bool=False, 
                            manual_children: List[dict]=None,
                            promotion_mode: bool=False) -> dict:
-    if not promotion_mode:
-        children = manual_children or [assemble_tree(session, child) for child in log.children]
+    # if not promotion mode, get all children (get them anyway to get the duration)
+    children = manual_children or [assemble_tree(session, child) for child in log.children]
     children_duration = sum([child['total_duration'] for child in children])
-    if promotion_mode:
+    # if promotion mode, only get children that have been promoted or have promoted descendants
+    if promotion_mode and not manual_children:
         children = [assemble_tree(session, child, promotion_mode=True) for child in log.children 
                     if has_promoted_descendant(session, child) or has_promote(session, child)]
     
@@ -264,7 +264,11 @@ def assemble_tree(session, log: Log,
             'three',
             'four',
             'many'][days_ago if days_ago <= 4 else 5]
-    days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
+    if not promotion_mode:
+        days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
+    # if promotion mode, the days_ago_class (needs to be renamed) is dependent on whether the log has been promoted
+    if promotion_mode:
+        days_ago_class = 'promoted' if has_promote(session, log) else ''
 
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
