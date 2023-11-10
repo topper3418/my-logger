@@ -256,19 +256,19 @@ def assemble_tree(session, log: Log,
     if children:
         total_duration = children_duration + direct_duration
     else:
-        total_duration = direct_duration
-    days_ago = log.days_ago
-    word = ['',
-            'one',
-            'two',
-            'three',
-            'four',
-            'many'][days_ago if days_ago <= 4 else 5]
-    if not promotion_mode:
-        days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
-    # if promotion mode, the days_ago_class (needs to be renamed) is dependent on whether the log has been promoted
-    if promotion_mode:
-        days_ago_class = 'promoted' if has_promote(session, log) else ''
+         total_duration = direct_duration
+    # days_ago = log.days_ago
+    # word = ['',
+    #         'one',
+    #         'two',
+    #         'three',
+    #         'four',
+    #         'many'][days_ago if days_ago <= 4 else 5]
+    # if not promotion_mode:
+    #     days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
+    # # if promotion mode, the days_ago_class (needs to be renamed) is dependent on whether the log has been promoted
+    # if promotion_mode:
+    #     days_ago_class = 'promoted' if has_promote(session, log) else ''
 
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
@@ -280,8 +280,6 @@ def assemble_tree(session, log: Log,
                 'total_duration': total_duration,
                 'direct_duration_string': get_duration_string(direct_duration),
                 'total_duration_string': get_duration_string(total_duration),
-                'is_from_today': log.days_ago == 0,
-                'days_ago_class': days_ago_class,
                 'days_ago': log.days_ago,
                 'children': children}
     # propagate up means to nest the dict in parents until the root is reached
