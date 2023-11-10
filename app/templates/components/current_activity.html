@@ -1,8 +1,14 @@
-<div class="column-conatiner">
+<div class="column-conatiner fill">
     <div class="centered-row space-below">
         <button data-parent_id="" onclick="toggleCenterView()">Toggle View</button>
         <h2 class="task-type-{{ current_activity_type }}">Current Activity: "{{current_activity }}"</h2>
         <!-- <div></div> -->
     </div>
-    {{ current_tree|safe }}
+    <div>
+        <div class="center-scroll">
+            <div class="scroll-box">
+                {{ current_tree|safe }}
+            </div>
+        </div>
+    </div>
 </div>
