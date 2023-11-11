@@ -1,22 +1,54 @@
-
-function collapseChildrenHelper(element) {
-    const children = element.querySelector('.children');
-    const logElement = element.querySelector('.log-element');
-    // if its hidden, show it and set the time to be the non-cumulative time
-    logDurationElement = element.querySelector('.duration');
-    if (children.classList.contains('hidden')) {
-        logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.time_spent);
-    } else {
-        logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.total_time_spent);
-    }
-    children.classList.toggle('hidden');
-    logElement.classList.toggle('bordered');
+function isCollapsed(element) {
+    return element.querySelector('.children').classList.contains('hidden');
 }
 
 
-function collapseChildren(event) {
+function collapseChildren(element) {
+    // if its already collapsed, do nothing
+    if (isCollapsed(element)) {
+        return;
+    }
+    const logDurationElement = element.querySelector('.duration');
+    const children = element.querySelector('.children');
+    const logElement = element.querySelector('.log-element');
+    logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.total_time_spent);
+    children.classList.add('hidden');
+    logElement.classList.add('bordered');
+}
+
+function hasChildren(element) {
+    const childrenContainer = element.querySelector('.children');
+    return childrenContainer.children.length > 0;
+}
+
+
+function expandChildren(element) {
+    // if its already expanded, do nothing
+    if (!isCollapsed(element)) {
+        return;
+    }
+    const logDurationElement = element.querySelector('.duration');
+    const children = element.querySelector('.children');
+    const logElement = element.querySelector('.log-element');
+    logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.time_spent);
+    children.classList.remove('hidden');
+    logElement.classList.remove('bordered');
+
+}
+
+
+function toggleCollapseHelper(element) {
+    if (isCollapsed(element)) {
+        expandChildren(element);
+    } else {
+        collapseChildren(element);
+    }
+}
+
+
+function toggleCollapse(event) {
     // get the parent element
-    collapseChildrenHelper(event.target.parentElement.parentElement);
+    toggleCollapseHelper(event.target.parentElement.parentElement);
 }
 
 
@@ -40,6 +72,30 @@ function get_expanded_ids(targetDiv) {
 }
 
 
+function getSiblings(logElement) {
+    const parent = logElement.parentElement;
+    const siblings = Array.from(parent.children).filter(child => child.classList.contains('log-element-container'));
+    // print the sibling id's for debugging
+    const siblingIds = [];
+    siblings.forEach(sibling => {
+        siblingIds.push(sibling.dataset.log_id);
+    });
+    console.log(siblingIds);
+    return siblings;
+}
+
+
+function collapseSiblings(event) {
+    const logElement = event.target.parentElement.parentElement;
+    const siblings = getSiblings(logElement);
+    siblings.forEach(sibling => {
+        if (hasChildren(sibling)) {
+            collapseChildren(sibling);
+        }
+    });
+}
+
+
 function populateTree(tree_html, targetDiv) {
     // non-rendered element to do our work on beforehand
     const tree = document.createElement('div');
@@ -52,14 +108,14 @@ function populateTree(tree_html, targetDiv) {
         const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
         // if the element exists and is not already collapsed, collapse it
         if (element && !element.querySelector('.children').classList.contains('hidden')) {
-            collapseChildrenHelper(element);
+            toggleCollapseHelper(element);
         }
     });
     expanded_ids.forEach(id => {
         const element = tree.querySelector(`.log-element-container[data-log_id="${id}"]`);
         // if the element exists and is collapsed, expand it. 
         if (element && element.querySelector('.children').classList.contains('hidden')) {
-            collapseChildrenHelper(element);
+            toggleCollapseHelper(element);
         }
     });
 
