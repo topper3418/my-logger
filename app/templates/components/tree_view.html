@@ -1,21 +1,8 @@
 {% macro render_log(log) %}
 <div class="log-element-container" data-log_id="{{ log.id }}">
-    <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %} {% if not log.is_from_today %} not-today {% endif %}">
-        <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="toggleCollapse(event)" ondblclick="collapseSiblings(event)">
-            {{ log.id }}:
-        </p>
-        {% if log.days_ago != 0 %}
-        <p class="daysAgo" onclick="navDaysAgo(event)" data-days_ago="{{log.days_ago}}">
-            [{{ log.days_ago }}]-
-        </p>
-        {% endif %}
-        <p class="logComment" ondblclick="switchFocus(event)" onclick="centerTable(event)">
-            {{ log.comment }}
-        </p>
-        <p class="duration" data-time_spent="{{ log.direct_duration }}" data-total_time_spent="{{ log.total_duration }}">
-            {{ log.direct_duration_string if not log.complete else log.total_duration_string}} 
-        </p>
-    </div>
+    
+    {{ log.html|safe }}
+
     <div class="children {% if log.complete %} hidden {% endif %}">
         {% for child in log.children %}
             {{ render_log(child) }}

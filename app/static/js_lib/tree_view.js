@@ -16,6 +16,7 @@ function collapseChildren(element) {
     logElement.classList.add('bordered');
 }
 
+
 function hasChildren(element) {
     const childrenContainer = element.querySelector('.children');
     return childrenContainer.children.length > 0;
@@ -58,7 +59,6 @@ function get_collapsed_ids(targetDiv) {
     collapsed.forEach(element => {
         collapsedIds.push(element.parentElement.dataset.log_id);
     });
-    console.log(collapsedIds)
     return collapsedIds;
 }
 
@@ -80,7 +80,6 @@ function getSiblings(logElement) {
     siblings.forEach(sibling => {
         siblingIds.push(sibling.dataset.log_id);
     });
-    console.log(siblingIds);
     return siblings;
 }
 
@@ -94,6 +93,35 @@ function collapseSiblings(event) {
         }
     });
 }
+
+
+function expandSiblings(event) {
+    const logElement = event.target.parentElement.parentElement;
+    const siblings = getSiblings(logElement);
+    siblings.forEach(sibling => {
+        if (hasChildren(sibling)) {
+            expandChildren(sibling);
+        }
+    });
+}
+
+
+function toggleSiblings(event) {
+    const logElement = event.target.parentElement.parentElement;
+    const siblings = getSiblings(logElement);
+    const collapsed = siblings.filter(sibling => isCollapsed(sibling));
+    const expanded = siblings.filter(sibling => !isCollapsed(sibling));
+    if (collapsed.length > expanded.length) {
+        siblings.forEach(sibling => {
+            expandChildren(sibling);
+        });
+    } else {
+        siblings.forEach(sibling => {
+            collapseChildren(sibling);
+        });
+    }
+}
+    
 
 
 function populateTree(tree_html, targetDiv) {

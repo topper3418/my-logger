@@ -6,23 +6,43 @@ from datetime import datetime
 
 from typing import List
 
-def render_log_tree(log_tree):
-    return render_template('components/tree_view.html', log_tree=log_tree)
+
+def render_log_tree_element(log_data: dict) -> str:
+    return render_template('components/log_tree_element.html', 
+                           log=log_data)
+
+
+def attach_log_tree_element(log_data: dict) -> str:
+    log_data['html'] = render_log_tree_element(log_data)
+    if log_data.get('children'):
+        for child in log_data['children']:
+            attach_log_tree_element(child)
+
+
+
+def render_log_tree(tree_data: List[dict]):
+    # loop through the tree data and render each element, attaching it to the element
+    for data_node in tree_data:
+        attach_log_tree_element(data_node)
+    return render_template('components/tree_view.html', 
+                           log_tree=tree_data)
 
 
 def render_log_table(logs):
-    return render_template('components/table_view.html', log_table=logs)
+    return render_template('components/table_view.html', 
+                           log_table=logs)
 
 
 def render_legend():
-    return render_template('components/type_legend.html', log_types=default_log_types)
+    return render_template('components/type_legend.html', 
+                           log_types=default_log_types)
 
 
-def render_type_dropdown(dropdown_id):
+def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0]):
     return render_template('components/type_dropdown.html', 
                            dropdown_id=dropdown_id, 
                            log_types=default_log_types,
-                           default_log_type=default_log_types[0])
+                           default_log_type=default_log_type)
 
 
 def render_center_tile(display_html: str, active_log: dict) -> str:
@@ -33,7 +53,10 @@ def render_center_tile(display_html: str, active_log: dict) -> str:
                            current_activity_type=active_log.get('log_type', 'None'))
 
 
-def render_index(tree_data: List[dict], table_data: List[dict], current_tree_data: List[dict], active_log: dict) -> str: 
+def render_index(tree_data: List[dict], 
+                 table_data: List[dict], 
+                 current_tree_data: List[dict], 
+                 active_log: dict) -> str: 
     log_tree = render_log_tree(tree_data)
     log_table = render_log_table(table_data)
     legend = render_legend()
@@ -54,7 +77,8 @@ def render_index(tree_data: List[dict], table_data: List[dict], current_tree_dat
 
 
 def render_edit_log(log_data: dict) -> str:
-    type_dropdown = render_type_dropdown('edit-log-type-dropdown')
+    type_dropdown = render_type_dropdown('edit-log-type-dropdown', 
+                                         log_data.get('log_type', 'None'))
     return render_template('popups/edit_log.html', 
                            log_id=log_data.get('id'),
                            parent_id=log_data.get('parent_id'),
