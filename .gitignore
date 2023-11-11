@@ -9,3 +9,4 @@ app/lib/__pycache__/comment_parser.cpython-311.pyc
 app/lib/__pycache__/db_funcs.cpython-311.pyc
 app/lib/__pycache__/models.cpython-311.pyc
 app/lib/__pycache__/util.cpython-311.pyc
+app/lib/__pycache__/rendering.cpython-311.pyc

@@ -2,6 +2,8 @@ from flask import render_template
 
 from .. import default_log_types
 
+from datetime import datetime
+
 from typing import List
 
 def render_log_tree(log_tree):
@@ -38,12 +40,17 @@ def render_index(tree_data: List[dict], table_data: List[dict], current_tree_dat
     type_dropdown = render_type_dropdown('log-type-dropdown')
     current_tree = render_log_tree(current_tree_data)
     current_activity = render_center_tile(current_tree, active_log)
+
+    # date to populate the default value for the dropdown
+    date = datetime.now().strftime('%Y-%m-%d')
+
     return render_template('index.html', 
                            log_tree=log_tree, 
                            log_table=log_table, 
                            type_legend=legend,
                            type_dropdown=type_dropdown,
-                           current_activity=current_activity)
+                           current_activity=current_activity,
+                           date=date)
 
 
 def render_edit_log(log_data: dict) -> str:
