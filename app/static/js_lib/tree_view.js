@@ -96,3 +96,17 @@ function centerTable(event) {
         element.classList.remove('pulse-highlight');
     }, 2500);
 }
+
+
+function navDaysAgo(event) {
+    const daysAgo = event.target.dataset.days_ago;
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysAgo);
+    const dateSelector = document.querySelector('#target-date');
+    const year = targetDate.getFullYear();
+    const month = (targetDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = targetDate.getDate().toString().padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    dateSelector.value = formattedDate;
+    refreshViews();
+}

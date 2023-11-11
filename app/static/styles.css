@@ -41,7 +41,8 @@ h2 {
   background-color: yellow;
 }
 
-.not-today {
+/* marked for delete below */
+/* .not-today {
   background-image: linear-gradient(45deg,  transparent 10%, #e6e6e6 10%,
                                             transparent 20%, #e6e6e6 20%,
                                             transparent 30%, #e6e6e6 30%,
@@ -72,7 +73,7 @@ h2 {
 
 .many-days-ago {
   background-color: rgba(255, 60, 0, 0.3);
-}
+} */
 
 body {
   margin: 0;
@@ -149,6 +150,12 @@ div {
   transform: translate(-50%, -50%);
 }
 
+.fill {
+  width: 100%;
+  height: 100%;
+
+}
+
 .stretch {
   align-items: stretch;
 }
@@ -193,6 +200,11 @@ div {
   overflow-y: scroll;
   max-height: 100vh;
   width: 20%;
+}
+
+.center-scroll {
+  overflow-y: scroll;
+  max-height: 50vh;
 }
 
 .center-column {
@@ -283,4 +295,16 @@ div {
   padding: 20px;
   margin: 0;
   height: calc(100vh - 200px);
+}
+
+
+.scroll-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
 }
