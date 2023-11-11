@@ -2,13 +2,13 @@
 # this includes returning objects from the models database, adding to the database
 # and returning other data structures from the database
 
-from app import Session, default_log_types#, get_color
+from .. import Session, default_log_types#, get_color
 
-from app.lib.models import (Log, 
-                        Activity, 
-                        Comment, 
-                        TimeSpan)
-from app.lib.util import get_duration_string
+from .models import (Log,
+                     Activity,
+                     Comment, 
+                     TimeSpan)
+from .util import get_duration_string
 
 from icecream import ic
 from datetime import datetime
@@ -107,7 +107,6 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
         log_ids = [log.id for log in logs]
         root_logs = [log for log in logs if log.parent_id not in log_ids]
         orig_root_logs = root_logs
-        ic(orig_root_logs)
         # if the orphan is an import, bring in the parent instead and put it in the back
         imported_logs, imported_log_ids = [], []
         for log in root_logs:

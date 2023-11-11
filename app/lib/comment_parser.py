@@ -1,5 +1,5 @@
-from app.lib.models import Comment
-from app import default_log_types
+from .models import Comment
+from .. import default_log_types
 
 from typing import Tuple, List
 

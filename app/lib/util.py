@@ -1,4 +1,4 @@
-from app.lib.models import TimeSpan
+from .models import TimeSpan
 
 from datetime import datetime
 
