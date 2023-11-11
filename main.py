@@ -1,6 +1,10 @@
-# FILEPATH: /c:/Users/travi/OneDrive/Desktop/my-logger/main.py
-
-from app.routes import app as populated_app
+import platform
+from app.routes import app
 
 if __name__ == '__main__':
-    populated_app.run(debug=True)
+    if platform.system() == 'Windows':
+        from waitress import serve
+        serve(app, port=5000)
+    else:
+        import os
+        os.system('gunicorn app.routes:app')
