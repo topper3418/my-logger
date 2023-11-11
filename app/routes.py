@@ -6,8 +6,8 @@ from datetime import datetime
 
 from icecream import ic
 
-from .comment_parser import parse_comment
-from .db_funcs import (set_activity, 
+from .lib.comment_parser import parse_comment
+from .lib.db_funcs import (set_activity, 
                           add_log, 
                           get_logs_object,
                           get_activities_object,
@@ -18,7 +18,7 @@ from .db_funcs import (set_activity,
                           get_current_activity_comment,
                           get_current_activity_log_dict,
                           get_promoted_logs_object)
-from .util import get_time_span
+from .lib.util import get_time_span
 from . import app, default_log_types
 
 # enable/disable ic here

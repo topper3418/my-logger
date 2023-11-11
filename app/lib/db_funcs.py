@@ -4,11 +4,11 @@
 
 from app import Session, default_log_types#, get_color
 
-from app.models import (Log, 
+from app.lib.models import (Log, 
                         Activity, 
                         Comment, 
                         TimeSpan)
-from app.util import get_duration_string
+from app.lib.util import get_duration_string
 
 from icecream import ic
 from datetime import datetime
@@ -257,18 +257,6 @@ def assemble_tree(session, log: Log,
         total_duration = children_duration + direct_duration
     else:
          total_duration = direct_duration
-    # days_ago = log.days_ago
-    # word = ['',
-    #         'one',
-    #         'two',
-    #         'three',
-    #         'four',
-    #         'many'][days_ago if days_ago <= 4 else 5]
-    # if not promotion_mode:
-    #     days_ago_class = f'{word}-days-ago' if days_ago <= 4 else 'many'
-    # # if promotion mode, the days_ago_class (needs to be renamed) is dependent on whether the log has been promoted
-    # if promotion_mode:
-    #     days_ago_class = 'promoted' if has_promote(session, log) else ''
 
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,

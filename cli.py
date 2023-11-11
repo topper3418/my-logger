@@ -3,7 +3,7 @@ import json
 
 import sys
 
-from app.comment_parser import parse_comment
+from app.lib.comment_parser import parse_comment
 
 def process_input(user_input):
     comment = parse_comment(user_input)

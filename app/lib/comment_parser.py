@@ -1,4 +1,4 @@
-from app.models import Comment
+from app.lib.models import Comment
 from app import default_log_types
 
 from typing import Tuple, List
