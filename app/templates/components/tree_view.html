@@ -1,5 +1,5 @@
 {% macro render_log(log) %}
-<div class="log-element-container" data-log_id="{{ log.id }}">
+<div class="log-element-container" data-log_id="{{ log.id }}" data-parent_id="{{ log.parent_id }}">
     
     {{ log.html|safe }}
 

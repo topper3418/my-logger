@@ -2,7 +2,7 @@
     <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="toggleCollapse(event)" ondblclick="toggleSiblings(event)">
         {{ log.id }}:
     </p>
-    {% if log.days_ago != 0 %}
+    {% if log.days_ago %}
     <p class="daysAgo" onclick="navDaysAgo(event)" data-days_ago="{{log.days_ago}}">
         [{{ log.days_ago }}]-
     </p>

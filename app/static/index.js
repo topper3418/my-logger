@@ -55,12 +55,20 @@ async function switchToParent(parent_id) {
     refreshViews();
 }
 
-async function refreshViews() { 
+// without renaming (I'll refactor this later, consider this the reminder), I'm switching 
+// this function to be "updateViews". Distinction: I'm checking with the server for 
+// differences and only updating the differences.
+async function refreshViews(full_refresh=false) { 
     const target_date = document.getElementById('target-date').value;
-    const tree_html = await getTreeHtml(target_date);
     const table_html = await getTableHtml(target_date);
     const activity = await getCurrentActivityHtml();
-    populateTree(tree_html, document.getElementById('log-tree'));
+    if (full_refresh) {
+        const tree_html = await getTreeHtml(target_date);
+        populateTree(tree_html, document.getElementById('log-tree'));
+    }
+    else {
+        updateTree(document.getElementById('log-tree'));
+    }
     populateTable(table_html);
     populateCurrentActivity(activity);
 }

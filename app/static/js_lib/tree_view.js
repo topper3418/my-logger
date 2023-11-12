@@ -194,3 +194,56 @@ function navDaysAgo(event) {
     dateSelector.value = formattedDate;
     refreshViews();
 }
+
+
+function getRenderedLogIds(parentDiv) {
+    const logElements = parentDiv.querySelectorAll('.log-element-container');
+    const logIds = [];
+    logElements.forEach(element => {
+        logIds.push(element.dataset.log_id);
+    });
+    return logIds;
+}
+
+
+async function getLogsToRender(queryParams) {
+    const response = await fetch(`/logs_to_render`, {
+        method: 'POST',
+        body: JSON.stringify(queryParams),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    return await response.text();
+}
+
+
+function updateTree(parentDiv, queryParams = {}) {
+    if (Object.keys(queryParams).length === 0) {
+        queryParams.target_date = document.getElementById('target-date').value;
+    }
+    queryParams.renderedIds = getRenderedLogIds(parentDiv);
+    console.log(queryParams)
+    getLogsToRender(queryParams).then(log_html => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = log_html;
+        const newLogIds = getRenderedLogIds(tempDiv);
+        const newLogElements = [];
+        newLogIds.forEach(id => {
+            newLogElements.push(tempDiv.querySelector(`.log-element-container[data-log_id="${id}"]`));
+        });
+        newLogElements.forEach(element => {
+            console.log(element);
+            const parentId = element.dataset.parent_id;
+            console.log(parentId);
+            const parentElement = parentDiv.querySelector(`.log-element-container[data-log_id="${parentId}"]`);
+            if (!parentElement) {
+                childrenContainer = parentDiv.querySelector('#log-tree-view');
+            }
+            else {
+                childrenContainer = parentElement.querySelector('.children');
+            }
+            childrenContainer.appendChild(element);
+        });
+    });
+}

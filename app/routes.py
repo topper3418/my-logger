@@ -22,7 +22,8 @@ from .lib.rendering import (render_log_tree,
                             render_log_table,
                             render_center_tile,
                             render_index,
-                            render_edit_log)
+                            render_edit_log,
+                            render_log_tree_element)
 from . import app, default_log_types
 
 # enable/disable ic here
@@ -52,11 +53,36 @@ def submit():
     return redirect('/')
 
 
-@app.route('/get_logs', methods=['GET'])
-def get_logs(): 
-    time_span = get_time_span(request.args)
-    data = get_logs_object(time_span=time_span)
-    return jsonify(data)
+# @app.route('/get_logs', methods=['GET'])
+# def get_logs(): 
+#     time_span = get_time_span(request.args)
+#     tree_object = get_log_tree_object(time_span=time_span, light_weight=True)
+#     def flatten_tree(tree: dict):
+#         return [tree['id']] + [flatten_tree(child) for child in tree['children']]
+#     data = []
+#     for tree in tree_object:
+#         data += flatten_tree(tree)
+#     return jsonify(data)
+
+
+@app.route('/logs_to_render', methods=['POST'])
+def logs_to_render():
+    request_data = request.get_json()
+    time_span = get_time_span(request_data)
+    tree_object = get_log_tree_object(time_span=time_span, light_weight=True)
+    def flatten_tree(tree: dict):
+        output = []
+        for child in tree['children']:
+            output += flatten_tree(child)
+        return [tree['id']] + output
+    log_ids = []
+    for tree in tree_object:
+        log_ids += flatten_tree(tree)
+    if rendered_ids := request_data.get('renderedIds'):
+        rendered_ids = [int(log_id) for log_id in rendered_ids]
+        log_ids = [log_id for log_id in log_ids if log_id not in rendered_ids]
+    log_data = get_log_tree_object(log_ids=log_ids)
+    return render_log_tree(log_data)
 
 
 @app.route('/get_log_types', methods=['GET'])

@@ -101,9 +101,16 @@ def get_activities_object(time_span: TimeSpan=None) -> List[dict]:
         return data
 
 
-def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
+def get_log_tree_object(time_span: TimeSpan=None, 
+                        log_ids: List[int]=None, 
+                        light_weight: bool=False) -> List[dict]:
     with Session() as session:
-        logs = query_logs(session, time_span=time_span)
+        if time_span:
+            logs = query_logs(session, time_span=time_span)
+        elif log_ids:
+            logs = [get_log(session, log_id) for log_id in log_ids]
+        else:
+            logs = query_logs(session)
         log_ids = [log.id for log in logs]
         root_logs = [log for log in logs if log.parent_id not in log_ids]
         orig_root_logs = root_logs
@@ -121,7 +128,7 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
             imported_log_descendents += get_descendants(session, imported_log)
         imported_log_ids += [log.id for log in imported_log_descendents]
         root_logs = [log for log in root_logs if log.parent_id not in imported_log_ids]
-        tree = [assemble_tree(session, root, time_span) for root in root_logs + imported_logs]
+        tree = [assemble_tree(session, root, time_span, light_weight=light_weight) for root in root_logs + imported_logs]
     return tree
 
 
@@ -242,17 +249,19 @@ def assemble_tree(session, log: Log,
                            time_span: TimeSpan=None, 
                            propagate_up: bool=False, 
                            manual_children: List[dict]=None,
-                           promotion_mode: bool=False) -> dict:
+                           promotion_mode: bool=False,
+                           light_weight: bool=False) -> dict:
     # if not promotion mode, get all children (get them anyway to get the duration)
-    children = manual_children or [assemble_tree(session, child) for child in log.children]
-    children_duration = sum([child['total_duration'] for child in children])
-    # if promotion mode, only get children that have been promoted or have promoted descendants
+    children = manual_children or [assemble_tree(session, child, light_weight=light_weight) for child in log.children]
+    if not light_weight:  # won't be using the duration if lightweight
+        children_duration = sum([child['total_duration'] for child in children])
+    # if promotion mode, only get children that have been promoted or have promoted descendants 
     if promotion_mode and not manual_children:
-        children = [assemble_tree(session, child, promotion_mode=True) for child in log.children 
+        children = [assemble_tree(session, child, promotion_mode=True, light_weight=light_weight) for child in log.children 
                     if has_promoted_descendant(session, child) or has_promote(session, child)]
     
     direct_duration = get_log_active_time(session, log, time_span=time_span)
-    if children:
+    if children and not light_weight:
         total_duration = children_duration + direct_duration
     else:
          total_duration = direct_duration
@@ -268,8 +277,11 @@ def assemble_tree(session, log: Log,
                 'direct_duration_string': get_duration_string(direct_duration),
                 'total_duration_string': get_duration_string(total_duration),
                 'days_ago': log.days_ago,
-                'children': children}
+                'children': children} if not light_weight else {'id': log.id, 
+                                                                'parent_id': log.parent_id,
+                                                                'children': children}
     # propagate up means to nest the dict in parents until the root is reached
+    # WARNING: if used with lightweight, may cause bugs. 
     if propagate_up:
         while log.parent_id:
             dict_out = assemble_tree(session, log.parent, manual_children=[dict_out])

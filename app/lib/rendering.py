@@ -22,6 +22,8 @@ def attach_log_tree_element(log_data: dict) -> str:
 
 def render_log_tree(tree_data: List[dict]):
     # loop through the tree data and render each element, attaching it to the element
+    if not tree_data:
+        return ''
     for data_node in tree_data:
         attach_log_tree_element(data_node)
     return render_template('components/tree_view.html', 
@@ -46,11 +48,12 @@ def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0]):
 
 
 def render_center_tile(display_html: str, active_log: dict) -> str:
-
     return render_template('components/current_activity.html', 
                            current_tree=display_html,
-                           current_activity=active_log.get('comment', ''),
-                           current_activity_type=active_log.get('log_type', 'None'))
+                           current_activity=active_log.get('comment', '') 
+                                if active_log else '',
+                           current_activity_type=active_log.get('log_type', 'None')
+                                if active_log else '')
 
 
 def render_index(tree_data: List[dict], 
