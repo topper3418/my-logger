@@ -1,17 +1,21 @@
 from flask import render_template
 
-from .. import default_log_types
+from .. import default_log_types, log_runtime
 
 from datetime import datetime
 
 from typing import List
 
+render_runtime_logger = log_runtime('render.log')
 
+
+#@render_runtime_logger
 def render_log_tree_element(log_data: dict) -> str:
     return render_template('components/log_tree_element.html', 
                            log=log_data)
 
 
+#@render_runtime_logger
 def attach_log_tree_element(log_data: dict) -> str:
     log_data['html'] = render_log_tree_element(log_data)
     if log_data.get('children'):
@@ -20,6 +24,7 @@ def attach_log_tree_element(log_data: dict) -> str:
 
 
 
+@render_runtime_logger
 def render_log_tree(tree_data: List[dict]):
     # loop through the tree data and render each element, attaching it to the element
     for data_node in tree_data:
@@ -28,16 +33,19 @@ def render_log_tree(tree_data: List[dict]):
                            log_tree=tree_data)
 
 
+@render_runtime_logger
 def render_log_table(logs):
     return render_template('components/table_view.html', 
                            log_table=logs)
 
 
+@render_runtime_logger
 def render_legend():
     return render_template('components/type_legend.html', 
                            log_types=default_log_types)
 
 
+@render_runtime_logger
 def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0]):
     return render_template('components/type_dropdown.html', 
                            dropdown_id=dropdown_id, 
@@ -45,6 +53,7 @@ def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0]):
                            default_log_type=default_log_type)
 
 
+@render_runtime_logger
 def render_center_tile(display_html: str, active_log: dict) -> str:
 
     return render_template('components/current_activity.html', 
@@ -53,6 +62,7 @@ def render_center_tile(display_html: str, active_log: dict) -> str:
                            current_activity_type=active_log.get('log_type', 'None'))
 
 
+@render_runtime_logger
 def render_index(tree_data: List[dict], 
                  table_data: List[dict], 
                  current_tree_data: List[dict], 
@@ -76,6 +86,7 @@ def render_index(tree_data: List[dict],
                            date=date)
 
 
+@render_runtime_logger
 def render_edit_log(log_data: dict) -> str:
     type_dropdown = render_type_dropdown('edit-log-type-dropdown', 
                                          log_data.get('log_type', 'None'))

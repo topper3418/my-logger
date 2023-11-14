@@ -2,7 +2,7 @@
 # this includes returning objects from the models database, adding to the database
 # and returning other data structures from the database
 
-from .. import Session, default_log_types#, get_color
+from .. import Session, default_log_types, log_runtime
 
 from .models import (Log,
                      Activity,
@@ -14,11 +14,14 @@ from icecream import ic
 from datetime import datetime
 from typing import List
 
+db_runtime_logger = log_runtime('db_runtime.log')
+
 
 #############################################################
 ## setters
 #############################################################
 
+@db_runtime_logger
 def set_activity(log_id: int) -> None:
     with Session() as session:
         activity = Activity(timestamp=datetime.now(), 
@@ -27,6 +30,7 @@ def set_activity(log_id: int) -> None:
         session.commit()
 
 
+@db_runtime_logger
 def add_log(comment: Comment, log_type_default: str=None) -> None:
     # use comment log type id if it exists, otherwise use the default
     log_type = comment.log_type or log_type_default
@@ -49,6 +53,7 @@ def add_log(comment: Comment, log_type_default: str=None) -> None:
         session.commit()
 
 
+@db_runtime_logger
 def edit_log(log_id: int, comment: Comment, log_type_default: str=None, parent_id: int=None) -> None:
     with Session() as session:
         log = get_log(session, log_id)
@@ -61,6 +66,7 @@ def edit_log(log_id: int, comment: Comment, log_type_default: str=None, parent_i
 ## native object getters
 #############################################################
 
+@db_runtime_logger
 def get_current_activity_comment() -> str|None:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
@@ -68,6 +74,7 @@ def get_current_activity_comment() -> str|None:
             return current_activity.active_log.comment
 
 
+@db_runtime_logger
 def get_current_tree_data() -> List[dict]|None:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
@@ -75,6 +82,7 @@ def get_current_tree_data() -> List[dict]|None:
             return [assemble_tree(session, current_activity.active_log, propagate_up=True)]
 
 
+@db_runtime_logger
 def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]:
     with Session() as session:
         logs = query_logs(session, time_span=time_span)
@@ -90,6 +98,7 @@ def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]
     return data
 
 
+@db_runtime_logger
 def get_activities_object(time_span: TimeSpan=None) -> List[dict]:
     with Session() as session:
         activities = query_activities(session, time_span=time_span)
@@ -101,6 +110,7 @@ def get_activities_object(time_span: TimeSpan=None) -> List[dict]:
         return data
 
 
+@db_runtime_logger
 def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
     with Session() as session:
         logs = query_logs(session, time_span=time_span)
@@ -125,6 +135,7 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
     return tree
 
 
+@db_runtime_logger
 def get_promoted_logs_object() -> List[dict]:
     with Session() as session:
         promotions = session.query(Log).filter(Log.log_type == 'promote').all()
@@ -137,6 +148,7 @@ def get_promoted_logs_object() -> List[dict]:
     return tree
 
 
+@db_runtime_logger
 def get_log_dict(log_id: int) -> dict:
     with Session() as session:
         log = get_log(session, log_id)
@@ -147,6 +159,7 @@ def get_log_dict(log_id: int) -> dict:
                 'parent_id': log.parent_id}
 
 
+@db_runtime_logger
 def get_current_activity_log_dict() -> dict:
     with Session() as session:
         current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
@@ -158,6 +171,7 @@ def get_current_activity_log_dict() -> dict:
 #############################################################
 # these all take a session as an argument, so they can be used in a session context
 
+@db_runtime_logger
 def query_logs(session, time_span: TimeSpan=None) -> List[Log]:
     if time_span:
         logs = session.query(Log).filter(Log.timestamp >= time_span.start, Log.timestamp <= time_span.end).all()
@@ -166,6 +180,7 @@ def query_logs(session, time_span: TimeSpan=None) -> List[Log]:
     return logs
 
 
+@db_runtime_logger
 def query_activities(session, time_span: TimeSpan=None) -> List[Activity]:
     if time_span:
         activities = session.query(Activity).filter(Activity.timestamp >= time_span.start, Activity.timestamp <= time_span.end).all()
@@ -174,19 +189,23 @@ def query_activities(session, time_span: TimeSpan=None) -> List[Activity]:
     return activities
 
 
+@db_runtime_logger
 def get_current_activity(session) -> Activity|None:
     return session.query(Activity).order_by(Activity.timestamp.desc()).first()
 
 
+@db_runtime_logger
 def get_children(session, log: Log) -> List[Log]:
     """returns a list of the children of the given log"""
     return session.query(Log).filter(Log.parent_id == log.id).all()
 
 
+@db_runtime_logger
 def get_log(session, log_id: int) -> Log:
     return session.query(Log).filter(Log.id == log_id).first()
 
 
+@db_runtime_logger
 def get_descendants(session, log: Log) -> List[Log]:
     """returns a list of the descendants of the given log"""
     descendants = []
@@ -203,6 +222,7 @@ def get_descendants(session, log: Log) -> List[Log]:
 # these return native objects but still maintain the context of a session
 
 
+@db_runtime_logger
 def get_activity_duration(session, activity: Activity) -> int:
     """returns the amount of time between the given activity and the next one"""
     next_activity = session.query(Activity).filter(Activity.id == activity.id + 1).first()
@@ -212,6 +232,7 @@ def get_activity_duration(session, activity: Activity) -> int:
         return (datetime.now() - activity.timestamp).total_seconds()
 
 
+@db_runtime_logger
 def get_log_active_time(session, log: Log, time_span: TimeSpan=None) -> int:
     """gets the total duration of activities linked to this log, today"""
     if not time_span:
@@ -222,22 +243,26 @@ def get_log_active_time(session, log: Log, time_span: TimeSpan=None) -> int:
         return sum([get_activity_duration(session, activity) for activity in activities if activity.timestamp in time_span])
 
 
+@db_runtime_logger
 def has_children(session, log: Log) -> bool:
     """returns True if the log has children, False otherwise"""
     return bool(session.query(Log).filter(Log.parent_id == log.id).first())
 
 
+@db_runtime_logger
 def has_promoted_descendant(session, log: Log) -> bool:
     """returns True if the log has a descendant that has been promoted, False otherwise"""
     descendants = get_descendants(session, log)
     return any(descendant.log_type == 'promote' for descendant in descendants)
 
 
+@db_runtime_logger
 def has_promote(session, log: Log) -> bool:
     """returns True if the log has been promoted, False otherwise"""
     return any(child.log_type == 'promote' for child in log.children)
 
 
+@db_runtime_logger
 def assemble_tree(session, log: Log, 
                            time_span: TimeSpan=None, 
                            propagate_up: bool=False, 

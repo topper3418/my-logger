@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 
+from .lib.logging import log_runtime
+
 from icecream import ic
 
 
