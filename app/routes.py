@@ -24,12 +24,15 @@ from .lib.rendering import (render_log_tree,
                             render_index,
                             render_edit_log,
                             render_log_tree_element)
-from . import app, default_log_types
+from . import app, default_log_types, log_runtime
+
+route_runtime_logger = log_runtime('route_runtimes.log')
 
 # enable/disable ic here
 #ic.disable()
 
 @app.route('/')
+@route_runtime_logger
 def index():
     date = datetime.now().strftime('%Y-%m-%d')
     time_span = get_time_span({'target_date': date})
@@ -42,6 +45,7 @@ def index():
 
 
 @app.route('/submit', methods=['POST'])
+@route_runtime_logger
 def submit():
     data = request.get_json()
     comment = parse_comment(data['log-comment'])
@@ -66,6 +70,7 @@ def submit():
 
 
 @app.route('/logs_to_render', methods=['POST'])
+@route_runtime_logger
 def logs_to_render():
     request_data = request.get_json()
     time_span = get_time_span(request_data)
@@ -86,11 +91,13 @@ def logs_to_render():
 
 
 @app.route('/get_log_types', methods=['GET'])
+@route_runtime_logger
 def get_log_types():
     return jsonify(default_log_types)
 
 
 @app.route('/current_activity', methods=['GET'])
+@route_runtime_logger
 def get_current_activity():
     current_tree_data = get_current_tree_data()
     current_tree = render_log_tree(current_tree_data)
@@ -99,6 +106,7 @@ def get_current_activity():
 
 
 @app.route('/promoted_activity', methods=['GET'])
+@route_runtime_logger
 def get_promoted_activity():
     promoted_tree_data = get_promoted_logs_object()
     promoted_tree = render_log_tree(promoted_tree_data)
@@ -107,6 +115,7 @@ def get_promoted_activity():
 
 
 @app.route('/get_activity_history', methods=['GET'])
+@route_runtime_logger
 def get_state_history():
     time_span = get_time_span(request.args)
 
@@ -115,6 +124,7 @@ def get_state_history():
 
 
 @app.route('/log_tree', methods=['GET'])
+@route_runtime_logger
 def get_log_tree():
     time_span = get_time_span(request.args)
     tree = get_log_tree_object(time_span=time_span)
@@ -122,6 +132,7 @@ def get_log_tree():
 
 
 @app.route('/log_table', methods=['GET'])
+@route_runtime_logger
 def get_log_table():
     time_span = get_time_span(request.args)
     logs = get_logs_object(time_span=time_span)
@@ -129,12 +140,14 @@ def get_log_table():
 
 
 @app.route('/log/<log_id>', methods=['GET'])
+@route_runtime_logger
 def get_log(log_id):
     log = get_log_dict(log_id)
     return jsonify(log)
 
 
 @app.route('/edit_log/<log_id>', methods=['POST', 'GET'])
+@route_runtime_logger
 def edit_log(log_id):
     # if GET, return the edit log popup
     if request.method == 'GET':

@@ -1,0 +1,38 @@
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 874-461-987
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:27] "GET /static/styles/log_table.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:27] "GET /static/styles/tree_view.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:27] "GET /static/styles/type_legend.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:27] "GET /static/styles.css HTTP/1.1" 200 -
+INFO:root:index took 127.19 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/styles.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/tree_view.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/styles/tree_view.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/styles/type_legend.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/styles/log_table.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/util.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/log_type_dropdown.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/edit_log_overlay.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/server_interface.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/index.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[36mGET /static/js_lib/table_view.js HTTP/1.1[0m" 304 -
+INFO:root:get_log_types took 0.00 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "GET /get_log_types HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:29] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:root:submit took 18.16 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "[32mPOST /submit HTTP/1.1[0m" 302 -
+INFO:root:index took 12.03 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "GET / HTTP/1.1" 200 -
+INFO:root:get_log_table took 1.00 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "GET /log_table?target_date=2023-11-13 HTTP/1.1" 200 -
+INFO:root:get_current_activity took 8.03 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "GET /current_activity HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "[36mGET /static/styles/log_table.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "[36mGET /static/styles/tree_view.css HTTP/1.1[0m" 304 -
+INFO:root:logs_to_render took 7.00 milliseconds
+INFO:werkzeug:127.0.0.1 - - [13/Nov/2023 22:19:35] "POST /logs_to_render HTTP/1.1" 200 -
