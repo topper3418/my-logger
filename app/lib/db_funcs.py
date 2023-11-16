@@ -255,13 +255,21 @@ def assemble_tree(session, log: Log,
         total_duration = children_duration + direct_duration
     else:
          total_duration = direct_duration
-
+    mods = log.mods
+    has_complete = mods['has_complete']
+    has_promote = mods['has_promote']
+    has_error = mods['has_error']
+    has_edit = mods['has_edit']
+    render = log.log_type not in ['promote', 'import', 'edit']
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
                 'log_type': log.log_type if log.log_type else None,
                 'comment': log.comment,
                 'parent_id': log.parent_id if log.parent_id else None,
-                'complete': log.has_complete_child,
+                'complete': has_complete,
+                'promote': has_promote,
+                'error': has_error,
+                'edit': has_edit,
                 'direct_duration': direct_duration,
                 'total_duration': total_duration,
                 'direct_duration_string': get_duration_string(direct_duration),

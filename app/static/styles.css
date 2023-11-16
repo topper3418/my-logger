@@ -281,6 +281,11 @@ div {
   color: lightcoral;
 }
 
+.task-type-edit {
+  color: rgb(255, 255, 0);
+  text-decoration: outline;
+}
+
 
 
 #main-title-banner {

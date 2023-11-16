@@ -14,6 +14,20 @@ class Log(db.Model):
     parent = db.relationship('Log', remote_side=[id], backref='children', lazy=True)
 
     @property
+    def mods(self):
+        children = self.children
+        has_complete = any(child.log_type == 'complete' for child in children)
+        has_promote = any(child.log_type == 'promote' for child in children)
+        has_error = any(child.log_type == 'error' for child in children)
+        has_edit = any(child.log_type == 'edit' for child in children)
+        return {
+            'has_complete': has_complete,
+            'has_promote': has_promote,
+            'has_error': has_error, 
+            'has_edit': has_edit
+        }
+
+    @property
     def has_complete_child(self):
         return any(child.log_type == 'complete' for child in self.children)
     
