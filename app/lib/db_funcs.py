@@ -66,13 +66,6 @@ def edit_log(log_id: int, comment: Comment, log_type_default: str=None, parent_i
 ## native object getters
 #############################################################
 
-@db_runtime_logger
-def get_current_activity_comment() -> str|None:
-    with Session() as session:
-        current_activity = session.query(Activity).order_by(Activity.timestamp.desc()).first()
-        if current_activity:
-            return current_activity.active_log.comment
-
 
 @db_runtime_logger
 def get_current_tree_data() -> List[dict]|None:
@@ -91,7 +84,7 @@ def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]
                  'log_type': log.log_type,
                  'time_spent': get_log_active_time(session, log),
                  'comment': log.comment,
-                 'complete': any(child.log_type == 'complete' for child in get_children(session, log)),
+                 'complete': log.has_complete_child,
                  'parent_id': log.parent_id} for log in logs]
     if reversed:
         data.reverse()
@@ -116,7 +109,6 @@ def get_log_tree_object(time_span: TimeSpan=None) -> List[dict]:
         logs = query_logs(session, time_span=time_span)
         log_ids = [log.id for log in logs]
         root_logs = [log for log in logs if log.parent_id not in log_ids]
-        orig_root_logs = root_logs
         # if the orphan is an import, bring in the parent instead and put it in the back
         imported_logs, imported_log_ids = [], []
         for log in root_logs:
@@ -195,12 +187,6 @@ def get_current_activity(session) -> Activity|None:
 
 
 @db_runtime_logger
-def get_children(session, log: Log) -> List[Log]:
-    """returns a list of the children of the given log"""
-    return session.query(Log).filter(Log.parent_id == log.id).all()
-
-
-@db_runtime_logger
 def get_log(session, log_id: int) -> Log:
     return session.query(Log).filter(Log.id == log_id).first()
 
@@ -244,22 +230,10 @@ def get_log_active_time(session, log: Log, time_span: TimeSpan=None) -> int:
 
 
 @db_runtime_logger
-def has_children(session, log: Log) -> bool:
-    """returns True if the log has children, False otherwise"""
-    return bool(session.query(Log).filter(Log.parent_id == log.id).first())
-
-
-@db_runtime_logger
 def has_promoted_descendant(session, log: Log) -> bool:
     """returns True if the log has a descendant that has been promoted, False otherwise"""
     descendants = get_descendants(session, log)
     return any(descendant.log_type == 'promote' for descendant in descendants)
-
-
-@db_runtime_logger
-def has_promote(session, log: Log) -> bool:
-    """returns True if the log has been promoted, False otherwise"""
-    return any(child.log_type == 'promote' for child in log.children)
 
 
 @db_runtime_logger
@@ -274,7 +248,7 @@ def assemble_tree(session, log: Log,
     # if promotion mode, only get children that have been promoted or have promoted descendants
     if promotion_mode and not manual_children:
         children = [assemble_tree(session, child, promotion_mode=True) for child in log.children 
-                    if has_promoted_descendant(session, child) or has_promote(session, child)]
+                    if has_promoted_descendant(session, child) or child.has_promote_child]
     
     direct_duration = get_log_active_time(session, log, time_span=time_span)
     if children:

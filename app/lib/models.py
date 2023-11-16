@@ -18,6 +18,14 @@ class Log(db.Model):
         return any(child.log_type == 'complete' for child in self.children)
     
     @property
+    def has_promote_child(self):
+        return any(child.log_type == 'promote' for child in self.children)
+    
+    @property
+    def has_error_child(self):
+        return any(child.log_type == 'error' for child in self.children)
+    
+    @property
     def is_from_today(self):
         return self.timestamp.date() == datetime.now().date()
     

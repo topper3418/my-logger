@@ -20,11 +20,13 @@ def get_function_logger(func_name, log_file):
 
     return logger
 
+
 # Decorator function to log runtime
 def log_runtime(log_file):
-    log_path = os.path.join('logs', log_file)
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
+    root_path = os.path.join('logs', 'runtime')
+    log_path = os.path.join(root_path, log_file)
+    if not os.path.exists(root_path):
+        os.makedirs(root_path)
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
