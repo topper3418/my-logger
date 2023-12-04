@@ -8,15 +8,15 @@ from icecream import ic
 
 from .lib.comment_parser import parse_comment
 from .lib.db_funcs import (set_activity, 
-                          add_log, 
-                          get_logs_object,
-                          get_activities_object,
-                          get_log_tree_object,
-                          get_log_dict,
-                          edit_log as db_edit_log,
-                          get_current_tree_data,
-                          get_current_activity_log_dict,
-                          get_promoted_logs_object)
+                           add_log, 
+                           get_logs_object,
+                           get_activities_object,
+                           get_log_tree_object,
+                           get_log_dict,
+                           edit_log as db_edit_log,
+                           get_current_tree_data,
+                           get_current_activity_log_dict,
+                           get_promoted_logs_object)
 from .lib.util import get_time_span
 from .lib.rendering import (render_log_tree,
                             render_log_table,
@@ -59,15 +59,19 @@ def submit():
 @app.route('/get_logs', methods=['GET'])
 @route_runtime_logger
 def get_logs(): 
-    time_span = get_time_span(request.args)
-    data = get_logs_object(time_span=time_span)
+    if log_ids := request.args.get('log_ids'):
+        log_ids = log_ids.split(',')
+        data = get_logs_object(log_ids=log_ids)
+    else:
+        time_span = get_time_span(request.args)
+        data = get_logs_object(time_span=time_span)
     return jsonify(data)
 
 
 @app.route('/get_log_types', methods=['GET'])
 @route_runtime_logger
 def get_log_types():
-    return jsonify(default_log_types)
+    return jsonify([log_type.name for log_type in default_log_types])
 
 
 @app.route('/current_activity', methods=['GET'])

@@ -1,5 +1,5 @@
 {% macro render_log(log) %}
-<div class="log-element-container" data-log_id="{{ log.id }}">
+<div class="log-element-container" data-log_id="{{ log.id }}" data-render_default="{{ log.render }}">
     
     {{ log.html|safe }}
 
@@ -18,3 +18,6 @@
 </div>
 <link rel="stylesheet" href="{{ url_for('static', filename='styles/tree_view.css') }}">
 <script src="{{ url_for('static', filename='js_lib/tree_view.js') }}"></script>
+<script>
+    renderDefault();
+</script>

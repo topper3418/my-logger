@@ -2,6 +2,21 @@ function isCollapsed(element) {
     return element.querySelector('.children').classList.contains('hidden');
 }
 
+function renderDefault() {
+    const renderDefaultValue = document.querySelector('#render-all').checked;
+    const elements = document.querySelectorAll('.log-element-container[data-render_default="False"]');
+    console.log(`found ${elements.length} elements`)
+    elements.forEach(element => {
+        if (!renderDefaultValue) {
+            element.style.display = 'none';
+        } else if (renderDefaultValue) {
+            element.style.display = 'flex';
+        }
+    });
+}
+
+
+
 
 function collapseChildren(element) {
     // if its already collapsed, do nothing
@@ -16,12 +31,10 @@ function collapseChildren(element) {
     logElement.classList.add('bordered');
 }
 
-
 function hasChildren(element) {
     const childrenContainer = element.querySelector('.children');
     return childrenContainer.children.length > 0;
 }
-
 
 function expandChildren(element) {
     // if its already expanded, do nothing
@@ -34,9 +47,7 @@ function expandChildren(element) {
     logDurationElement.innerHTML = formatSeconds(logDurationElement.dataset.time_spent);
     children.classList.remove('hidden');
     logElement.classList.remove('bordered');
-
 }
-
 
 function toggleCollapseHelper(element) {
     if (isCollapsed(element)) {
@@ -46,12 +57,10 @@ function toggleCollapseHelper(element) {
     }
 }
 
-
 function toggleCollapse(event) {
     // get the parent element
     toggleCollapseHelper(event.target.parentElement.parentElement);
 }
-
 
 function get_collapsed_ids(targetDiv) {
     const collapsed = targetDiv.querySelectorAll('.children.hidden');
@@ -71,7 +80,6 @@ function get_expanded_ids(targetDiv) {
     return expandedIds;
 }
 
-
 function getSiblings(logElement) {
     const parent = logElement.parentElement;
     const siblings = Array.from(parent.children).filter(child => child.classList.contains('log-element-container'));
@@ -82,6 +90,73 @@ function getSiblings(logElement) {
     });
     return siblings;
 }
+
+function getCompleteId(logElement) {
+    const childrenContainer = logElement.querySelector('.children');
+    const children = childrenContainer.children;
+    // reverse the list
+    const reversed = Array.from(children).reverse();
+    // iterate through
+    let completedId = null;
+    reversed.forEach(child => {
+        // if the child is complete, that is the one we are looking for
+        const childLogElement = child.children[0];
+        if (childLogElement.classList.contains('task-type-complete')) {
+            // return the id
+            completedId = child.dataset.log_id;
+            return 
+        }
+    });
+    return completedId;
+}
+
+function onHover(event) {
+    const completed = event.target.classList.contains('task-type-complete');
+    const logElement = event.target.parentElement.parentElement;
+    if (completed) {
+        // get the completed id
+        const completedId = getCompleteId(logElement);
+        // get the table element
+        const tableElement = getLogTableElement(completedId);
+        const toolTipContainer = document.getElementById('tooltip-container');
+        // calculate the position of the tooltip container
+        const targetRect = event.target.getBoundingClientRect();
+        const containerRect = toolTipContainer.getBoundingClientRect();
+        const top = targetRect.top + targetRect.height;
+        const left = targetRect.left + targetRect.width - containerRect.width;
+        // set the position of the tooltip container
+        toolTipContainer.style.top = `${top}px`;
+        toolTipContainer.style.left = `${left}px`;
+        // put the table element in the tooltip container
+        const copiedTableElement = tableElement.cloneNode(); // Copy the table element
+        // append the tableElement children to the copiedTableElement one by one
+        for (let i = 0; i < tableElement.children.length; i++) {
+            const child = tableElement.children[i].cloneNode(true);
+            copiedTableElement.appendChild(child);
+        }
+        console.log(tableElement);
+        console.log(copiedTableElement);
+        toolTipContainer.appendChild(copiedTableElement); // Append the copied table element
+        // show the tooltip container
+        toolTipContainer.style.display = 'block';
+        
+    }
+}
+
+function hoverOff(event) {
+    // hide the tooltip container
+    const toolTipContainer = document.getElementById('tooltip-container');
+    toolTipContainer.style.display = 'none';
+    // clear the table element from the tooltip container
+    toolTipContainer.innerHTML = '';
+}
+
+// Attach event listeners
+const logElements = document.querySelectorAll('.log-element-container');
+logElements.forEach(element => {
+    element.addEventListener('mouseenter', onHover);
+    element.addEventListener('mouseleave', hoverOff);
+});
 
 
 function collapseSiblings(event) {

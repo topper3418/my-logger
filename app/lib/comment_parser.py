@@ -1,5 +1,5 @@
 from .models import Comment
-from .. import default_log_types
+from .. import get_log_type
 
 from typing import Tuple, List
 
@@ -21,7 +21,7 @@ def get_command_type(command: str) -> str:
     """takes in a command, and returns the type of command it is"""
     if command.isnumeric() or not command:
         return 'parent_id'
-    if command in default_log_types:
+    if get_log_type(command):
         return 'log_type'
     
     

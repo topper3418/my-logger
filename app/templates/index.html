@@ -16,6 +16,10 @@
         </div>
         <div class="row-container" id="main-content">
             <div class="tree-column">
+                <div class="row-container push-right">
+                    <label for="render-all">Render All</label>
+                    <input type="checkbox" id="render-all", name="render-all", onchange="renderDefault()">
+                </div>
                 <div id="log-tree">
                     {{ log_tree|safe }}
                 </div>
@@ -46,6 +50,7 @@
             </div>
         </div>
     </div>
+    <div id="tooltip-container" class="tooltip-container"></div>
     <div id="overlay" style="display: none;" class="overlay"></div>    
     <script src="{{ url_for('static', filename='js_lib/server_interface.js') }}"></script>
     <script src="{{ url_for('static', filename='js_lib/util.js') }}"></script>

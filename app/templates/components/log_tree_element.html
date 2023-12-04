@@ -1,5 +1,5 @@
 <div class="row-container log-element task-type-{{  log.log_type  }} {% if log.complete %} bordered {% endif %} {% if not log.is_from_today %} not-today {% endif %}">
-    <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="toggleCollapse(event)" ondblclick="toggleSiblings(event)">
+    <p class="logIdLabel {{ 'task-type-complete' if log.complete else '' }}" onclick="toggleCollapse(event)" ondblclick="toggleSiblings(event)" onmouseover="onHover(event)" onmouseleave="hoverOff(event)">
         {{ log.id }}:
     </p>
     {% if log.days_ago != 0 %}

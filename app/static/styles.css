@@ -41,40 +41,6 @@ h2 {
   background-color: yellow;
 }
 
-/* marked for delete below */
-/* .not-today {
-  background-image: linear-gradient(45deg,  transparent 10%, #e6e6e6 10%,
-                                            transparent 20%, #e6e6e6 20%,
-                                            transparent 30%, #e6e6e6 30%,
-                                            transparent 40%, #e6e6e6 40%, 
-                                            transparent 50%, #e6e6e6 50%,
-                                            transparent 60%, #e6e6e6 60%,
-                                            transparent 70%, #e6e6e6 70%,
-                                            transparent 80%, #e6e6e6 80%,
-                                            transparent 90%, #e6e6e6 90%, 
-                                           transparent);
-}
-
-.one-day-ago {
-  background-color: rgba(153, 255, 0, 0.3);
-}
-
-.two-days-ago {
-  background-color: rgba(255, 242, 0, 0.3);
-}
-
-.three-days-ago {
-  background-color: rgba(255, 174, 0, 0.3);
-}
-
-.four-days-ago {
-  background-color: rgba(128, 34, 0, 0.3);
-}
-
-.many-days-ago {
-  background-color: rgba(255, 60, 0, 0.3);
-} */
-
 body {
   margin: 0;
   padding: 0;
@@ -286,7 +252,9 @@ div {
   text-decoration: outline;
 }
 
-
+.un-rendered {
+  display: none;
+}
 
 #main-title-banner {
   background-color: #f2f2f2;

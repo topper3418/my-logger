@@ -2,7 +2,7 @@
 # this includes returning objects from the models database, adding to the database
 # and returning other data structures from the database
 
-from .. import Session, default_log_types, log_runtime
+from .. import Session, log_runtime, get_log_type
 
 from .models import (Log,
                      Activity,
@@ -76,9 +76,9 @@ def get_current_tree_data() -> List[dict]|None:
 
 
 @db_runtime_logger
-def get_logs_object(time_span: TimeSpan=None, reversed: bool=True) -> List[dict]:
+def get_logs_object(time_span: TimeSpan=None, log_ids: List[int]=None, reversed: bool=True) -> List[dict]:
     with Session() as session:
-        logs = query_logs(session, time_span=time_span)
+        logs = query_logs(session, time_span=time_span, log_ids=log_ids)
         data = [{'id': log.id,
                  'timestamp': log.timestamp.strftime('%H:%M'),
                  'log_type': log.log_type,
@@ -164,9 +164,11 @@ def get_current_activity_log_dict() -> dict:
 # these all take a session as an argument, so they can be used in a session context
 
 @db_runtime_logger
-def query_logs(session, time_span: TimeSpan=None) -> List[Log]:
+def query_logs(session, time_span: TimeSpan=None, log_ids: List[int]=None) -> List[Log]:
     if time_span:
         logs = session.query(Log).filter(Log.timestamp >= time_span.start, Log.timestamp <= time_span.end).all()
+    elif log_ids:
+        logs = session.query(Log).filter(Log.id.in_(log_ids)).all()
     else:
         logs = session.query(Log).all()
     return logs
@@ -260,7 +262,7 @@ def assemble_tree(session, log: Log,
     has_promote = mods['has_promote']
     has_error = mods['has_error']
     has_edit = mods['has_edit']
-    render = log.log_type not in ['promote', 'import', 'edit']
+    render = get_log_type(log.log_type).render
     dict_out = {'id': log.id,
                 'timestamp': log.timestamp,
                 'log_type': log.log_type if log.log_type else None,
@@ -275,6 +277,7 @@ def assemble_tree(session, log: Log,
                 'direct_duration_string': get_duration_string(direct_duration),
                 'total_duration_string': get_duration_string(total_duration),
                 'days_ago': log.days_ago,
+                'render': render,
                 'children': children}
     # propagate up means to nest the dict in parents until the root is reached
     if propagate_up:

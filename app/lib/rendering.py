@@ -42,14 +42,14 @@ def render_log_table(logs):
 @render_runtime_logger
 def render_legend():
     return render_template('components/type_legend.html', 
-                           log_types=default_log_types)
+                           log_types=[log_type.name for log_type in default_log_types])
 
 
 @render_runtime_logger
-def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0]):
+def render_type_dropdown(dropdown_id, default_log_type=default_log_types[0].name):
     return render_template('components/type_dropdown.html', 
                            dropdown_id=dropdown_id, 
-                           log_types=default_log_types,
+                           log_types=[log_type.name for log_type in default_log_types],
                            default_log_type=default_log_type)
 
 
@@ -93,6 +93,6 @@ def render_edit_log(log_data: dict) -> str:
     return render_template('popups/edit_log.html', 
                            log_id=log_data.get('id'),
                            parent_id=log_data.get('parent_id'),
-                           log_types=default_log_types,
+                           log_types=[log_type.name for log_type in default_log_types],
                            comment=log_data.get('comment'),
                            type_dropdown=type_dropdown)

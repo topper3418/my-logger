@@ -63,6 +63,7 @@ async function refreshViews() {
     populateTree(tree_html, document.getElementById('log-tree'));
     populateTable(table_html);
     populateCurrentActivity(activity);
+    renderDefault();
 }
 
 
